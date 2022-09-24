@@ -1,0 +1,450 @@
+---
+title: "Dr. Marron's Suggestions"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+```{r}
+cordf = data.frame("Exploitation DTM" = traffic$exploitDTM,
+                   "Citizenship DTM" = traffic$citizenshipDTM,
+                   "Debt Bondage" = traffic$meansOfControlDebtBondage,
+                   "Earnings Taken" = traffic$meansOfControlTakesEarnings,
+                   "Recieved Threats" = traffic$meansOfControlThreats,
+                   "Psychological Abuse" = traffic$meansOfControlPsychologicalAbuse,
+                   "Documents Withheld" = traffic$meansOfControlWithholdsDocuments,
+                   "Domestic Work" = traffic$typeOfLabourDomesticWork,
+                   "Sexual Exploit" = traffic$isSexualExploit,
+                   "Forced Labor" = traffic$isForcedLabour)
+
+corrplot(cor(cordf,  use = "pairwise.complete.obs")[c(1:2),], method = "circle", tl.cex = 0.7, cl.ratio = 0.2, cl.length = 3, tl.col = "black")
+```
+
+```{r, echo = F, message = F}
+library(readr)
+traffic = read_csv("Datasets/CTDCSimple1.csv")[-c(1)]
+
+traffic$CitHigh = ifelse(traffic$citizenshipDTM %in% c(2,3), 0,
+                         ifelse(traffic$citizenshipDTM %in% c(4,5),1, NA))
+traffic$ExploitHigh = ifelse(traffic$exploitDTM %in% c(2,3), 0,
+                             ifelse(traffic$exploitDTM %in% c(4,5),1, NA))
+
+traffic2 = traffic[-c(9:26,31:34)]
+
+
+traffic3 = traffic2[-c(26:30)]
+
+
+traffic4 = traffic3[-c(1,2,5,7)]
+traffic4 = traffic4[complete.cases(traffic4),]
+
+traffic5 = traffic4[-c(15,17,19)]
+```
+
+# Cleaning and organizing the Dataset
+```{r}
+library(readr)
+CTDC <- read_csv("Datasets/CTDC.csv")[-c(1)]
+head(CTDC)
+```
+
+Remove Character variables that concatenate the sub-type variables
+```{r}
+CTDC2 = CTDC[-c(27,36,50,55,57)]
+#head(CTDC2)
+table(complete.cases(CTDC2))
+barplot(colSums(is.na(CTDC2)),las=2, cex.names=.5)
+```
+Since our goal is to predict what types of traffcking are present, all the variables pertaining to type are most important  Since MajorityStatusAtExploit and majorityEntry have the most missing values, and since these and majorityStatus are also "encoded" in ageBroad, we can remove these three variables in an effort to have complete data entries.
+
+```{r}
+table(complete.cases(CTDC2))
+```
+
+Before removing these two variables we have 37 complete cases.
+
+```{r}
+CTDC3 = CTDC2[-c(5,6,7)]
+table(complete.cases(CTDC3))
+
+``` 
+After removing them, we have 798 complete cases.
+
+**Now replace country with stage in DTM**
+
+Turn alpha 2 code into alpha 3 since alpha-3 is used in the DTM dataset
+
+Create dataframe with Alpha-2 codes,and DTM stage
+```{r}
+codes = read_csv("Datasets/CountryCodes.csv")
+dtm = read_csv("Datasets/Countries_Data2.0.csv")[c(2,14)]
+
+codes
+
+###### left join in R using merge() function 
+df = merge(x=codes,y=dtm, by.x="Alpha-3 code", by.y = "Code", all.x=TRUE)
+df2 = df[c(3,6)]
+```
+
+Add column in CTDC with DTM stage for "countryOfExploitation"
+```{r}
+df3 = merge(x=CTDC3,y=df2, by.x="CountryOfExploitation", by.y = "Alpha-2 code", all.x=TRUE)
+
+
+#rename DTM_Stage to exploitDTM
+names(df3)[ncol(df3)] = "exploitDTM"
+
+#move columns
+CTDC4 = df3[c(2:6,1,ncol(df3),8:ncol(df3)-1)]
+
+```
+
+Add column in CTDC with DTM stage for "citizenship"
+```{r}
+df5 = merge(x=CTDC4,y=df2, by.x="citizenship", by.y = "Alpha-2 code", all.x=TRUE)
+
+#rename DTM_Stage to citizenshipDTM
+names(df5)[ncol(df5)] = "citizenshipDTM"
+#move columns
+df6 = df5[c(2:7,1,ncol(df5),9:ncol(df3)-1)]
+```
+Now we have a dataset that contains all the information we need. 
+
+**List variables and explain their type**
+
+```{r}
+traffic = df6
+#head(traffic)
+#write.csv(traffic, "CTDCSimple1.csv")
+```
+
+
+# Exploratory Data analysis
+
+
+
+
+## Simple Plots
+
+Each bar represents a different stage in Demographic transition for the citizenship or exploitation country of a trafficking victim (citizenshipDTM and exploitDTm respectivley). The width of the bar represents proportionally, how many entries in the data set have that for the exploitation or citizenship country for that entry. Finally, the dark area for each bar shows what proportion of the entries with that stage, have the attribute of the left axis label.
+
+
+```{r}
+plot(factor(isSexualExploit)~factor(citizenshipDTM), data = traffic)
+```
+We can tell from this plot for example, that stage 2 countries have the lowest proportion of sexual exploits in our dataset, and stage 4 countries have the highest proportion. By looking at these plots, we can roughly determine visually which aspects of human trafficking have the greatest correlation with DTM stage. 
+
+Unfortunately a simple numerical correlation would not work because, as in the case of sexual exploits, we see that there is no linear correlation, but it does appear to be true that sexual exploits become more likely as a country moves from stage 2 to 3, and 3 to 4, but less likely from 4 to 5.
+
+
+```{r, echo = F}
+plot(factor(traffic$gender[which(traffic$gender != "Transgender/NonConforming")])
+     ~factor(citizenshipDTM[which(traffic$gender != "Transgender/NonConforming")]), data = traffic,
+     xlab="Citizenship DTM", ylab="Gender")
+
+#Removed transgender/nonconforming because these entries make up a minuscule amount of entries (64 total out of 97000)
+# but the extra label made it hard to interperet the graph
+
+
+plot(factor(ageBroad)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Broad Age")
+plot(factor(isForcedLabour)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Forced Labor")
+plot(factor(isSexualExploit)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Sexual Exploit")
+plot(factor(isOtherExploit)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Other Exploit")
+plot(factor(isSexAndLabour)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Sex and Labour")
+plot(factor(isForcedMarriage)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Forced Marriage")
+plot(factor(isForcedMilitary)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Forced Military")
+plot(factor(isOrganRemoval)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Organ Removal")
+plot(factor(isSlaveryAndPractices)~factor(citizenshipDTM), data = traffic,
+     xlab="Citizenship DTM", ylab="Slavery and Practices")
+```
+
+From these plots we can determine that the citizenshipDTM seems to only strongly interact with Forced Labour, Sexual Exploits, and gender. The categories of Other, Sex & Labour, Forced Marriage, and Slavery & practices, seem to have weak interactions. Finally, the categories of Organ Removal and Forced Military do not appear in any of the entries in our dataset in which the Citizenship DTM is known.
+
+Looking at the distribution of ages in each DTM stage, there appears to potentially be an interaction between Citizenship DTM and age.
+
+## Repeat for ExploitDTM
+
+Here we repeat the same process for Exploitation Country DTM
+
+```{r, echo = F}
+plot(factor(traffic$gender[which(traffic$gender != "Transgender/NonConforming")])
+     ~factor(exploitDTM[which(traffic$gender != "Transgender/NonConforming")]), data = traffic,
+     xlab="Exploitation DTM", ylab="Gender")
+
+#Removed transgender/nonconforming because these entries make up a minuscule amount of entries (64 total out of 97000)
+# but the extra label made it hard to interperet the graph
+
+
+plot(factor(ageBroad)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Broad Age")
+plot(factor(isForcedLabour)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Forced Labor")
+plot(factor(isSexualExploit)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Sexual Exploit")
+plot(factor(isOtherExploit)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Other Exploit")
+plot(factor(isSexAndLabour)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Sex and Labour")
+plot(factor(isForcedMarriage)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Forced Marriage")
+plot(factor(isForcedMilitary)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Forced Military")
+plot(factor(isOrganRemoval)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Organ Removal")
+plot(factor(isSlaveryAndPractices)~factor(exploitDTM), data = traffic,
+     xlab="Exploitation DTM", ylab="Slavery and Practices")
+```
+
+Exploitation DTM interacts strongest with Gender, Broad Age, Forced Labor, and Sexual Exploit. Again, there are no instances of Organ Removal or Forced military in the data set for entries in which the Exploitation DTM is known. And there is weak interaction with Other Exploit, Sex & Labour, Forced Marriage, and Slavery & practices
+ 
+
+## Correlation between all Variables
+
+```{r}
+library(corrplot)
+corrplot(cor(traffic[-c(2:5,7)],  use = "pairwise.complete.obs"), method = "circle", tl.cex = 0.5, na.label = "-")
+```
+The only major correlations that appear are between citizenship DTM & Exploit DTM, and between Sexual exploits and labour exploits. There is no correlation between DTM stages present in this plot and any variable; however, this is to be expected because, as previously mentioned, some of the patterns are not necessarily linear.
+
+# Data Modification
+
+## Dummy Variable Creation
+Before creating a more advanced model for specific stages, it would be beneficial to make a model that classifies based on high or low DTM stages.
+
+```{r}
+hist(c(traffic$exploitDTM, traffic$citizenshipDTM))
+```
+
+We will classify all 4 and 5 stages as"high" and stages 2 and 3 as "low." A dummy variable will be created with 1 for high stages, and 0 for low stages.
+
+```{r}
+traffic$CitHigh = ifelse(traffic$citizenshipDTM %in% c(2,3), 0,
+                         ifelse(traffic$citizenshipDTM %in% c(4,5),1, NA))
+traffic$ExploitHigh = ifelse(traffic$exploitDTM %in% c(2,3), 0,
+                             ifelse(traffic$exploitDTM %in% c(4,5),1, NA))
+```
+
+```{r}
+table(traffic$CitHigh)
+```
+Our dataset contains 26898 high stage countries and 26392 low-stage countries for citizenship of victims
+
+```{r}
+table(traffic$ExploitHigh)
+```
+Our dataset contains 61697 high stage countries and 11795 low-stage countries for where exploits occur
+
+## Visualize missing values
+
+```{r}
+library(naniar)
+vis_miss(traffic, warn_large_data = FALSE)
+```
+From this it seems as though "meansOfControl-", isForcedMarriage, isForcedMilitary, isOrganRemoval, and SlaveryAndPractices have the most missing values in our dataset. After removing them we can retry creating our model on this reduced dataset.
+
+```{r, echo = F}
+traffic2 = traffic[-c(9:26,31:34)]
+#head(traffic2)
+```
+
+
+```{r, echo = F}
+vis_miss(traffic2, warn_large_data = FALSE)
+```
+At this point it is hard to tell if any individual variables are contributing to missingness with this visual. So now we can use a bar-graph to get a count of the total number of missing values for each predictor.
+
+```{r, echo = F, warning = F}
+gg_miss_var(traffic2)
+```
+This shows us that typeOfSexPrivateSexualServices, isAbduction, typeOfSexRemoteInteractiveServices, typeOfSexPornography, and typeOfSexProstitution are our most missing values. Since a majority of these are "typeOfSex..." it may be helpful to see if these variables are missing at the same time or if their missingness is independent of each other.
+
+```{r}
+gg_miss_upset(traffic2)
+```
+This visual shows that there is indeed an interaction between all 5 of these variables, there are 48748 observations in which all 5 of these variables are missing. So it would be beneficial to remove these variables from our dataset.
+
+```{r}
+traffic3 = traffic2[-c(26:30)]
+sum(complete.cases(traffic2))
+sum(complete.cases(traffic3))
+```
+We have managed to go from having only 1428 complete cases to having 7740 complete cases after removing these 5 variables. This should be enough to create a preliminary model.
+
+```{r, echo = F}
+#gg_miss_upset(traffic3, nsets = 12)
+# Possibly remove citDTM stuff for modelling exploit, since where people are exploited is where they are mor elikely to be found
+# and where greater need for law enforcement being educated is
+```
+
+
+## Preprocess Data for Model Creation
+
+Create a general model for stage of Exploitation country being high with all variables except yearOfRegistration, and DataSource (these things aren't able to help law enforcement because if this information is known then victim is already found). Also remove Country names, and DTM stages since we have dummy variables representing these instead. Finally, we have removed any incomplete observations.
+```{r, echo = F}
+traffic4 = traffic3[-c(1,2,5,7)]
+traffic4 = traffic4[complete.cases(traffic4),]
+#traffic4
+```
+
+Another factor to consider for variable selection is if any of our predictors now all have the same value in complete data entries. By looking at the sum for our predictors (columns), we can see how many of our observed values are 1. If this number is 0 or the total number of rows in the data set (7740), then the column should be removed because it gives us no additional information.
+
+```{r}
+sums = apply(traffic4[-c(1,2)], 2, sum)
+sums[sums == 0 | sums == 1]
+```
+There are three variables in our complete dataset with 0 observed instances are typeOfLabourIllicitActivities, typeOfLabourMiningOrDrilling, and typeOfLabourTransportation, so we will remove these from the dataset.
+
+```{r, echo = F}
+traffic5 = traffic4[-c(15,17,19)]
+head(traffic5)
+```
+
+## Analyze Dataset
+
+```{r, warning = F}
+library(corrplot)
+corrplot(cor(traffic5[-c(1,2)],  use = "pairwise.complete.obs"), method = "circle", tl.cex = 0.5, na.label = "-")
+```
+From the Visual Correlation plot, we can see that there is a very strong correlation (-0.878) between isSexualExploit and isForcedLabour. If these are so closely correlated, then this will lead to multicollinearity issues. But these issues do not necessarily lead to prediction of goodness of fit issues for our model. [SOURCE]
+
+
+# Simple Logit Model
+
+```{r, warning = F}
+ExpMod1 = glm(ExploitHigh~factor(gender)+factor(ageBroad)+.-ageBroad-gender,
+                    data = traffic5[-c(3,4,23)], family = binomial) 
+                    #3,4 are DTM stages and 23 is CitHigh
+
+summary(ExpMod1)
+```
+
+
+
+### Train/Test model for exploit DTM
+
+
+Create a dataset of complete enteries only
+```{r}
+set.seed(122) #set seed to ensure same sample each time
+# Shuffle Data To Ensure Random Sampling
+
+shuffle = traffic5[sample(1:nrow(traffic5)),]
+
+index = ceiling(nrow(traffic5)*0.9) # 0.9 = 90% training data split
+train = shuffle[c(1:index),][-c(3,4)]
+test = shuffle[c((index+1):nrow(shuffle)),]
+```
+
+Using the same model as before, we will now test how accurate it is. To use our model to make predictions, we must give it a complete observation, and then it will take that observation, and return the probability of the response being true (1). In our case, it returns the probability of an observation being in a highly developed country. A higher probability, means the model is more confident in the fact that an observation is in a high-DTM country, and a low probability means the model is confident the observation is not in a high-DTM country. For probabilities near 50%, the model is confident in its prediction at all.
+
+First we will train the model on our training data:
+
+```{r, warning = F}
+ExpDTMMod1 = glm(ExploitHigh~factor(gender)+factor(ageBroad)+., data = train[-c(21)], family = binomial)
+#summary(ExpDTMMod1)
+```
+
+Now we will predict the probabilities on our test data:
+
+```{r}
+ExpPredictions = predict(ExpDTMMod1, test, type="response")
+```
+
+
+Since our Variable ExploitHigh already uses values 0 and 1, and probabilities go from 0 to 1, we can simply find the difference between the prediction vector, and the ExploitHigh vector to get an idea of how accurate our model was.
+
+```{r}
+mean(abs(ExpPredictions - test$ExploitHigh))
+```
+Our model has an average distance from the correct value of .112.
+
+
+For each predicted probability, we want to round high values to 1 to classify the observation as HighDtm, and 0 for lower probabilities. For now we will use 0.5 as a midpoint and round up or down accordingly. 
+
+```{r}
+ExpPredClass = ifelse(ExpPredictions<0.5,0,1)
+```
+
+Then by finding the difference, this gives us a 1 every time there is a misclassification, and a 0 if classified correctly. By summing this new vector of absolute differences, we get the total number of misclassifications:
+
+```{r}
+sum(abs(ExpPredClass - test$ExploitHigh))
+```
+Our model had a total of 40 misclassifications on the test data.
+
+```{r}
+40/nrow(test)
+```
+This comes out to an error rate of 5.1%
+
+### Analyzing Errors
+
+
+Create table with DTM stage, DTM high, and prediction, and if prediction is correct
+```{r}
+act.pred = data.frame(DTM = test$exploitDTM,
+                      High = test$ExploitHigh,
+                      Prediction = ExpPredClass,
+                      Correct = 1 - abs(ExpPredClass - test$ExploitHigh))
+row.names(act.pred) <- NULL
+act.pred
+```
+
+Create a contengiencey table to see where misclassifications are:
+
+```{r}
+table(act.pred$High, act.pred$Correct, dnn=c("High DTM", "Correct"))
+```
+From the table, it seems like a disproportionate amount of misclassifications came from Low DTM countries being classified into High-DTM countries. However, the model is still fairly accurate.
+
+```{r}
+table(act.pred$DTM, act.pred$Correct, dnn=c("DTM", "Correct"))
+```
+However, it seems like the most misclassifications occurred in our mid-range DTM stages, and that very few misclassifications happened in Stage 2 countries and Stage 5 countries. Perhaps modifying our model to classify into 4 classes would be better. but to do this, we need a greater number of complete observations. As a result, we would have to remove more predictors, which could sacrifice the efficacy or validity of our model.
+
+To help improve this, simply changing our rounding cutoff may yield better outcomes.
+
+### Determining Rounding Cutoff
+
+```{r}
+predprob = predict(ExpMod1, test, type = "response")
+
+thresh <- seq(0.001,0.999,0.001)
+err = as.numeric(seq(1,length(thresh)))
+
+  for(j in seq(along=thresh)){
+    pp = ifelse(ExpPredictions<thresh[j],0,1)
+    xx = sum(abs(pp - test$ExploitHigh))
+    paste(xx)
+    error = xx/nrow(test)
+    err[j] <- error
+}
+
+
+matplot(thresh,err,type="l",xlab="Threshold" ,ylab="Misclassification Rate",lty=1:2)
+```
+
+*** Try Bootstrapping, and apply some sort of "weight" of which complete observations to select based off of occurrence of binary labels in full data set with missing values complete ***
+
+- Randomly select complete observation
+- append it to dataset with weight of the norm (l1, or l2) of the difference between each observed value and the difference from the mean value in the full dataset.
+
+
+*** Try dropout each iteration? ***
+
+*** Replace missing values with mean of value for rest of dataset ***
+
+*** Replace missing values with mean of value for rest of dataset entries in which similar variables are known ***
+     - If isSexualExploit is unknown, but we know the type of labor was prostitution, what is the mean value for isSexualExploit
+       for observations that also have prostition, and use that as replacement
+
+
