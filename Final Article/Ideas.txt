@@ -1,0 +1,7 @@
+- Define each predictor into one of a few categpries to determine if it should be removed:
+		- Complete Not Helpful (Has all or most entries but will not be helpful to law enforcement)
+		- Complete Helpful (Complete and Helpful) (Possibly give bigger weights to these variables)
+		- Incomplete Not Helpful (Missing a lot of data and too specific to be helpful for law enforcement or data already covered by							other predictors)
+		- Incomplete Helpful (Incomplete data that would be helpful, possibly try to salvage with bootstrapping and low weight on model)
+		- Dependently Missing (Missing in conjuncion with other variables very frequently)
+- Describe potential for bootstrapping to address missing data
