@@ -6,24 +6,11 @@ output:
   html_notebook: default
   pdf_document: default
 ---
-```{r}
-cordf = data.frame("Exploitation DTM" = traffic$exploitDTM,
-                   "Citizenship DTM" = traffic$citizenshipDTM,
-                   "Debt Bondage" = traffic$meansOfControlDebtBondage,
-                   "Earnings Taken" = traffic$meansOfControlTakesEarnings,
-                   "Recieved Threats" = traffic$meansOfControlThreats,
-                   "Psychological Abuse" = traffic$meansOfControlPsychologicalAbuse,
-                   "Documents Withheld" = traffic$meansOfControlWithholdsDocuments,
-                   "Domestic Work" = traffic$typeOfLabourDomesticWork,
-                   "Sexual Exploit" = traffic$isSexualExploit,
-                   "Forced Labor" = traffic$isForcedLabour)
 
-corrplot(cor(cordf,  use = "pairwise.complete.obs")[c(1:2),], method = "circle", tl.cex = 0.7, cl.ratio = 0.2, cl.length = 3, tl.col = "black")
-```
 
 ```{r, echo = F, message = F}
 library(readr)
-traffic = read_csv("Datasets/CTDCSimple1.csv")[-c(1)]
+traffic = read_csv("../Datasets/CTDCSimple1.csv")[-c(1)]
 
 traffic$CitHigh = ifelse(traffic$citizenshipDTM %in% c(2,3), 0,
                          ifelse(traffic$citizenshipDTM %in% c(4,5),1, NA))
