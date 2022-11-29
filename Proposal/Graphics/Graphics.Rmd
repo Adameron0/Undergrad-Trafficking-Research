@@ -2,9 +2,17 @@
 title: "Proposal Graphics"
 ---
 
+```{r, message = F}
+library(readr)
+ctdc = read_csv("../../Datasets/CTDC.csv")
+traffic = read_csv("../../Datasets/CTDCSimple1.csv")[-c(1)]
+```
 
+
+#Corr Plot
 ```{r, warning = F}
 library(corrplot)
+
 cordf = data.frame("Exploitation DTM" = traffic$exploitDTM,
                    "Citizenship DTM" = traffic$citizenshipDTM,
                    "Debt Bondage" = traffic$meansOfControlDebtBondage,
@@ -16,9 +24,43 @@ cordf = data.frame("Exploitation DTM" = traffic$exploitDTM,
                    "Sexual Exploit" = traffic$isSexualExploit,
                    "Forced Labor" = traffic$isForcedLabour)
 
-png("Corrplot.png", units="px", width=400, height=400, res=150)
 corrplot(cor(cordf,  use = "pairwise.complete.obs")[c(1:2),], method = "circle", tl.cex = 0.7, cl.ratio = 0.2, cl.length = 3, tl.col = "black")
-dev.off()
+png("Corrplot.png", units="px", width=1600, height=600, res=300)
+invisible(dev.off())
 ```
+
+
+
+#Cases of Importing to United States
+
+```{r, warning = F}
+library(ggplot2)
+df1 = traffic[c(which(traffic$CountryOfExploitation == "US")),]
+df2 = traffic[c(which(traffic$CountryOfExploitation == "US" & (traffic$citizenship != "US" | is.na(traffic$citizenship)))),]
+
+
+ggplot(traffic,aes(yearOfRegistration))+
+  geom_line(data = df1, aes(fill=..count.., color = "All Cases"),stat="bin",binwidth=1, size = 3)+
+  geom_line(data = df2, aes(fill=..count.., color = "Non-US Citizens"),stat="bin",binwidth=1, size = 3)+
+  xlab("Year") + ylab("Number of Cases") + labs(color='') +
+  theme(legend.position = c(.12-0.001, .95), text = element_text(size = 15)) + ggtitle("Cases of Human Trafficking Within the United States")
+
+ggsave("USTrafficking.png", last_plot())
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
