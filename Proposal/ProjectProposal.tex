@@ -136,15 +136,17 @@ This is a section of a larger book in which Susan Tiano discusses human traffick
 
 \nocite{SlaveBook}
 
+
+
 \section{Preliminary Reasoning and Analysis}
 
-The Counter Trafficking Data Collaborative (CTDC) has a publicly available, anonymized dataset, which is a collection of over 400,000 entries for human trafficking victims \parencite{CTDC}. The database has plenty of useful information, such as country of citizenship, country of exploitation, and many variables expressing the type(s) of trafficking the victim experienced. This data set is what my research will be based on, as it is the largest publicly available database for instances of international human trafficking.
+The Counter Trafficking Data Collaborative (CTDC) has a publicly available, anonymized dataset, which is a collection of over 400,000 entries for human trafficking victims \parencite{CTDC}. The database has plenty of useful information, such as country of citizenship, country of exploitation, and many variables expressing the type(s) of trafficking the victim experienced. This data set is what this research and models will be based on, as it is the largest publicly available database for instances of international human trafficking.
 
-While the CTDC database is extremely large, it does not contain information needed for a quantitative analysis involving a country's development. For this, one needs a numerical way to categorize countries into "stages," as the goal is to make a generalized model, not one that pertains to specific countries. By far the simplest way to categorize countries would be by using the Demographic Transition Model \parencite{bongaarts2009}. Using this model, a country can be categorized into one of 5 stages, with stage 1 being the lowest developed countries, and stage 5 being the most developed.
+While the CTDC database is extremely large, it does not contain information on a country's development. For this, one needs a numerical way to categorize countries into "stages," as the goal is to make a generalized model for stages of development, not one that pertains to specific countries. By far the simplest way to categorize countries would be by using the Demographic Transition Model \parencite{bongaarts2009}. Using this model, a country can be categorized into one of 5 stages, with stage 1 being the lowest developed countries, and stage 5 being the most developed.
 
-Unlike many other ways of classifying countries in terms of their development, this model uses birth, death, and migration rates to determine a country's stage \parencite{bongaarts2009}. While these rates are not directly related to a country's economic growth or decline, the model has been shown to be very successful at expressing economic changes, while not being as strongly influenced by sudden, temporary economic setbacks or "booms" \parencite{kirk1996,bar2010,galor2000}. The model has even been shown to help predict changes in the "shadow economy," in areas of illegal activity such as drug trafficking \parencite{sch1994}. It is for these reasons that I feel there is a way to efficiently model and predict changes in human trafficking as a country becomes more or less developed.
+Unlike many other ways of classifying countries in terms of their development, this model uses birth, death, and migration rates to determine a country's stage \parencite{bongaarts2009}. While these rates are not directly related to a country's economic growth or decline, the model has been shown to be very successful at expressing economic changes, while not being as strongly influenced by sudden, temporary economic setbacks or "booms" \parencite{kirk1996,bar2010,galor2000}. The model has even been shown to help predict changes in the "shadow economy," in areas of illegal activity such as drug trafficking \parencite{sch1994}. It is for these reasons that I believe there exists a way to efficiently model and predict changes in the human trafficking typology of a country as it becomes more or less developed.
 
-By looking at Complete entries in the dateset we are using, we can do a preliminary correlation comparison. We can take both the stage of the citizenship country, and exploitation country for a victim, and see if this correlates with any aspects of trafficking they experienced. The closer to a perfectly correlated two variables are, the more red or blue the circle will be. If a circle is red, that means the trait is seen more in low stage countries, and if it is blue, it is observed more often in high-stage countries.
+For our data, a complete entry is a case in which we have a value for all variables in the dataset. An incomplete entry is any entry in which there are values which are unknown, such as the age of the victim, or the type of trafficking experienced. By looking at complete entries in the CTDC Dataset, we can do a preliminary correlation comparison. We can take both the stage of the citizenship country, and exploitation country for a victim, and see if this correlates with any aspects of trafficking they experienced. The closer to perfectly correlated (-1 or 1) or connected two variables are, the more red or blue the circle will be. If a circle is red, that means the trait is seen more in low stage countries, and if it is blue, it is observed more often in high-stage countries.
 
 \hspace*{-1.5cm}
 \includegraphics{Corrplot} \bigskip
@@ -154,19 +156,19 @@ Each of the variables included in the plot have at least a moderate correlation 
 
 \section{Research Plan}
 
-The eventual goal of this research is to create a multinomial regression model. This is a probabilistic model which, for any given observation, it will give the probability of the observation being in a certain group. In our case, the groups will be the stage of development of a country in which a human trafficking victim is found. By creating a model of this type, we can analyze each coefficient for the predictors, and see what impact changing a predictor has on the predicted outcome. Thus, we can quantify just how much of a connection exists between stage of development, and certain predictors in our model.
+The eventual goal of this research is to create a multinomial regression model. This is a probabilistic model which, for any given observation, it will give the probability of the observation being in a certain group. In our case, the groups will be the stage of development of a country in which a human trafficking victim is found. By creating a model of this type, we can determine which aspects of human trafficking have the greatest correlation with the stage of development of the country. As a result, one can learn what impact a change in the level of development within a country has on the typology of human trafficking. Thus, we can quantify just how much of an effect country development has on human trafficking.
 
 The creation of this model will initially be done using a multinomial neural-network architecture to find which coefficients for predictors provide the least number of classifications on the data. If time permits, other model architectures will be tested to see if any of those perform better on our data set.
 
 
-Perhaps the biggest hurdle to be overcome is the sheer lack of complete entries in the data set. As a result, the first steps of this research will involve analyzing what data is missing, and determining how to address that. By using visualizations and quantitative measurements, we can determine which observed values (predictors) are causing the most incomplete entire in our data. We can also determine which predictors are missing in conjunction with each other, and which ones are missing independently. By doing this, we can determine which variables we should remove first, and see if it gives us enough complete observations to create a helpful model.
+Perhaps the biggest hurdle to be overcome is the sheer lack of complete entries in the data set. As a result, the first steps of this research will involve analyzing what data is missing, and determining how to address that. By using visualizations and quantitative measurements, we can determine which observed values (predictors) are causing the most incomplete entries in our data. We can also determine which predictors are missing in tandem, and which ones are missing independently. By doing this, we can determine which variables we should remove first, and see if it gives us enough complete observations to create a helpful model.
 
 To test the effectiveness of our model, we will randomly split our data into two groups: a group for training the model, and a group for testing the model. After training the model, we will simply input the observations for the test set, and see how accurately the model is able to classify the observations.
 
 \subsection{Assumptions and Limitations}
 
 
-For the purposes of this research, instead of classifying an instance of human trafficking into one type or category, we will use many different categories to describe a case in the following way. We will begin by having two main categories with sub-categories in each. Then for each case, we will "classify" it by simply mentioning which of the sub categories are present. If all of the observed sub-categories fall under sex trafficking, then we can classify the case under sex trafficking. Similarly the same would happen with labor trafficking, and if a case has aspects of both, then we classify the case as "labor and sex trafficking".
+For the purposes of this research, instead of classifying an instance of human trafficking into one type or category, we will use many different categories to describe a case in the following way. We will begin by having two main categories with sub-categories. Then for each case, we will "classify" it by simply observing which of the sub categories are present. If all of the observed sub-categories fall under sex trafficking, then we can classify the case under sex trafficking. Similarly the same would happen with labor trafficking, and if a case has aspects of both, then we classify the case as "labor and sex trafficking".
 
 \FloatBarrier
 \begin{table}[htb]
@@ -185,7 +187,8 @@ For the purposes of this research, instead of classifying an instance of human t
 \end{table}
 \FloatBarrier
 
-\subsection{Procedure Outline}
+Each example in our sub-categories, have a binary variable in the CTDC Dataset. this means that for a sub-category, the entry has a value of 0 if it is not observed, and 1 if it is. These values could also be missing, and if we determine that a variable is missing very frequently, then it may be worth removing that variable for all entries in order to have a more complete dataset. For example, if it is determined that a large percentage of entries have no entries for "Mining or Drilling," then we may remove the variable from the dataset entirely in order to create a more robust model.
+
 
 \section{Final Goals}
 
