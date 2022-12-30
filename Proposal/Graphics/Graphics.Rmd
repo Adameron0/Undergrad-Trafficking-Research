@@ -52,6 +52,27 @@ ggsave("USTrafficking.png", last_plot())
 
 
 
+```{r, warning = F}
+library(ggplot2)
+df1 = traffic[c(which(traffic$CountryOfExploitation == "US")),]
+df2 = traffic[c(which(traffic$CountryOfExploitation == "US" & (traffic$citizenship != "US" | is.na(traffic$citizenship)))),]
+
+
+ggplot(traffic,aes(yearOfRegistration))+
+  geom_line(data = df1[df1$isSexualExploit == 1,], aes(fill=..count.., color = "Sex Trafficking")
+            ,stat="bin",binwidth=1, size = 3)+
+  
+  geom_line(data = df1[df1$isForcedLabour == 1,], aes(fill=..count.., color = "Labor Trafficking")
+            ,stat="bin",binwidth=1, size = 3)+
+  
+  geom_line(data = df1[df1$isSexAndLabour == 1,], aes(fill=..count.., color = "Sex & Labor Trafficking")
+            ,stat="bin",binwidth=1, size = 3)+
+  
+  xlab("Year") + ylab("Number of Cases") + labs(color='') +
+  theme(legend.position = c(.16+0.001, .95), text = element_text(size = 15), plot.title.position = "panel") + ggtitle("Types of Human Trafficking in U.S.", )
+
+ggsave("USTrafficking2.png", last_plot())
+```
 
 
 
