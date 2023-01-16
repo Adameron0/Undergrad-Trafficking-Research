@@ -32,7 +32,7 @@ traffic5 = traffic4[-c(15,17,19)]
 # Cleaning and organizing the Dataset
 ```{r}
 library(readr)
-CTDC <- read_csv("Datasets/CTDC.csv")[-c(1)]
+CTDC <- read_csv("../Datasets/CTDC.csv")[-c(1)]
 head(CTDC)
 ```
 
@@ -64,8 +64,8 @@ Turn alpha 2 code into alpha 3 since alpha-3 is used in the DTM dataset
 
 Create dataframe with Alpha-2 codes,and DTM stage
 ```{r}
-codes = read_csv("Datasets/CountryCodes.csv")
-dtm = read_csv("Datasets/Countries_Data2.0.csv")[c(2,14)]
+codes = read_csv("../Datasets/CountryCodes.csv")
+dtm = read_csv("../Datasets/Countries_Data2.0.csv")[c(2,14)]
 
 codes
 
