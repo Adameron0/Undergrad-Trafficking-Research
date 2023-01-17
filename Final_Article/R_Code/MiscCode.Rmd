@@ -1,0 +1,108 @@
+---
+title: "Final Report Code"
+output: pdf_document
+---
+
+# Import Data
+```{r, echo = F, message = F}
+library(readr)
+
+CTDC = read_csv("../../Datasets/CTDC.csv")[-c(1)]# Remove Terms of Use Column
+```
+
+# Section # Manipulating CTDC Dataset
+
+# Count Number of Complete Cases in Unaltered Data Set
+```{r}
+sum(complete.cases(CTDC)) # Counts number of Complete Cases
+```
+
+# Initialize List of Removed Variables
+
+```{r}
+removed = c()
+```
+
+
+
+# Function to Remove Variables From CTDC
+
+```{r}
+remove_columns <- function(remove){
+  features = names(CTDC)
+
+  # Update features to only include kept variables
+  features = c(setdiff(features, remove))
+  
+  # Update CTDC to only have kept features
+  CTDC <<- CTDC[features]
+  
+  # Complete Cases
+  cases = sum(complete.cases(CTDC))
+  print(paste(cases, "complete cases"))
+}
+```
+
+
+
+# Section #.# Logically Removing Variables
+
+```{r}
+removed = append(removed, c(
+           'yearOfRegistration','Datasource','majorityStatus',
+           'meansOfControlConcatenated', 'typeOfExploitConcatenated',
+           'typeOfLabourConcatenated', 'typeOfSexConcatenated'
+           ))
+
+remove_columns(removed)
+```
+
+# Section #.# Quantitatively Removing Variables
+
+## Remove Variables With One Unique Value
+```{r}
+
+
+for (x in 1:ncol(CTDC)) { # Loop over all columns
+  column = CTDC[x]
+  unq_vals = unique(column)
+  
+  no_na = na.omit(unq_vals) # Remove NA value from list
+  
+  n_rem = nrow(no_na) # Count Remaining Unique Values
+
+  # If Number of Values <= 1 then add to remove list
+  if (n_rem <= 1){
+    removed = append(removed, names(CTDC)[x])
+  }
+  
+
+}
+
+
+# Remove from Data Set
+remove_columns(removed)
+```
+
+# NA Visualizations
+
+```{r}
+library(ggplot2)
+
+na_cnts = unname(colSums(is.na(CTDC))) #Array of NA counts
+
+#NA Count Dataframe
+na_df = data.frame(Variable = names(CTDC), Count = na_cnts)
+```
+
+# NA Barplot
+
+```{r}
+# Only include top 10
+tenth = sort(na_df$Count, decreasing = TRUE)[10]
+top_10 = na_df[na_df$Count >= tenth,]
+
+ggplot(top_10)+geom_bar(stat = "identity")
+```
+
+
