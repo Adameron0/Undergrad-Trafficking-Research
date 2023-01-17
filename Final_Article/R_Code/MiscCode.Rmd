@@ -3,6 +3,29 @@ title: "Final Report Code"
 output: pdf_document
 ---
 
+```{r}
+library(extrafont) 
+library(tidyverse)
+
+# execute once to add fonts:
+# font_import() 
+
+loadfonts(device='win')
+windowsFonts("Latex" = windowsFont("CMU Serif"))
+```
+
+
+
+
+```{r}
+library(ggplot2)
+library(ggthemes)
+library(Cairo)
+```
+
+
+
+
 # Import Data
 ```{r, echo = F, message = F}
 library(readr)
@@ -51,7 +74,8 @@ remove_columns <- function(remove){
 removed = append(removed, c(
            'yearOfRegistration','Datasource','majorityStatus',
            'meansOfControlConcatenated', 'typeOfExploitConcatenated',
-           'typeOfLabourConcatenated', 'typeOfSexConcatenated'
+           'typeOfLabourConcatenated', 'typeOfSexConcatenated',
+           'majorityStatusAtExploit', 'majorityEntry'
            ))
 
 remove_columns(removed)
@@ -88,21 +112,136 @@ remove_columns(removed)
 
 ```{r}
 library(ggplot2)
+library(ggthemes)
+path = './Graphics'
 
+
+```
+
+# NA Barplot
+
+```{r}
 na_cnts = unname(colSums(is.na(CTDC))) #Array of NA counts
 
 #NA Count Dataframe
 na_df = data.frame(Variable = names(CTDC), Count = na_cnts)
 ```
 
-# NA Barplot
-
+Plot with no Variable Names
 ```{r}
-# Only include top 10
-tenth = sort(na_df$Count, decreasing = TRUE)[10]
-top_10 = na_df[na_df$Count >= tenth,]
 
-ggplot(top_10)+geom_bar(stat = "identity")
+# Only include top Number (n) of missings
+n = 51
+
+top = sort(na_df$Count, decreasing = TRUE)[n]
+top = na_df[na_df$Count >= top,]
+
+ggplot(top, aes(x = reorder(Variable, Count),y = Count)) +
+  geom_bar(stat = "identity", width = 1) +
+  # Theme and Layout Stuff
+  theme_grey(base_size = 8) +
+  theme(axis.text.y=element_blank(),axis.ticks.y=element_blank(),
+        text = element_text(family = "Latex", size = 15)) +
+  xlab("Variable") + ylab("Count of NAs") + coord_flip() +
+  # Add Vertical line at 75000
+  geom_hline(yintercept = 75000, linetype="solid", 
+                color = "salmon", size=2, alpha=0.6)
+
+ggsave(file='./Graphics/NABarplot.png', width=6, height=3)
 ```
 
+```{r}
+# Only include variables with missing count over n
+n = 75000
+
+top = na_df[na_df$Count >= n,]
+
+ggplot(top, aes(x = reorder(Variable, Count),y = Count)) +
+  geom_bar(stat = "identity", width = 1) +
+  # Theme and Layout Stuff
+  theme_grey(base_size = 8) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) +
+   xlab(element_blank()) + ylab("Count of NAs") + coord_flip(ylim=c(75000,95000))
+  # Add Vertical line at 75000
+
+ggsave(file='./Graphics/NABarplot2.png', width=6, height=3)
+```
+
+Means of Control Analysis/Removal
+
+```{r}
+#Means of Control Only
+moc = CTDC[c(4:20)]
+not_spec = CTDC$meansOfControlNotSpecified
+
+table(not_spec)
+```
+
+```{r}
+moc[is.na(moc)] = 0
+
+ggplot(moc, aes(x=rowSums(moc))) + geom_histogram(binwidth = 1) +
+  theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+  xlab("Means of Control Row Sum") + ylab("Occurances")
+  
+ggsave(file='./Graphics/MeansOfControlSumHist.png', width=6, height=3)
+```
+
+```{r}
+remove = c("meansOfControlDebtBondage"             
+,"meansOfControlTakesEarnings"           
+,"meansOfControlRestrictsFinancialAccess"
+,"meansOfControlThreats"                 
+,"meansOfControlPsychologicalAbuse"      
+,"meansOfControlPhysicalAbuse"           
+,"meansOfControlSexualAbuse"             
+,"meansOfControlFalsePromises"           
+,"meansOfControlPsychoactiveSubstances"  
+,"meansOfControlRestrictsMovement"       
+,"meansOfControlRestrictsMedicalCare"    
+,"meansOfControlExcessiveWorkingHours"   
+,"meansOfControlUsesChildren"            
+,"meansOfControlThreatOfLawEnforcement"  
+,"meansOfControlWithholdsNecessities"    
+,"meansOfControlWithholdsDocuments"      
+,"meansOfControlOther"                   
+,"meansOfControlNotSpecified")
+
+remove_columns(remove)
+```
+
+Naniar Missing Visualizations
+
+```{r}
+library(naniar)
+vis_miss(CTDC, warn_large_data = FALSE) +
+  theme(axis.text.y = element_blank(),
+    text = element_text(family = "Latex", size = 12),
+    axis.text.x = element_text(angle = -90, hjust=1),
+    axis.title.y = element_text(angle = -90),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+    ) +
+  guides(fill = guide_legend(label.theme = element_text(family = "Latex", angle = -90)))
+    
+
+ggsave(file='./Graphics/NaniarVis1.png', width = 6, height = 8)
+```
+
+Remove isSlaveryAndPractices and isForcedMArriage
+
+```{r}
+remove = c("isSlaveryAndPractices","isForcedMarriage")
+
+remove_columns(remove)
+```
+
+Missing Variables Together
+
+```{r}
+gg_miss_upset(CTDC)
+```
 
