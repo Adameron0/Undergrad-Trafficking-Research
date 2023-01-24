@@ -27,6 +27,8 @@ backend=bibtex,
 		
 	\end{abstract}
 	
+	\section{Demographic Transition}
+	
 	\section{Outline Methods}
 	
 	- Dataset (History, purpose, etc)\\
@@ -118,9 +120,9 @@ backend=bibtex,
 		\includegraphics[width = \textwidth]{NABarplot2}
 	\end{figure}
 	
-	From the figure, one can see that the "meansOfControl" variables take up a large number of spaces on the list. Of the 19 variables with over 75,000 NA values, 17 of them are "meansOfControl." This could be a direct effect of the way in which the data is recorded. If an individual is transcribing cases to the data set, they may have decided that after determining that one type of control was used, to leave all the other types as "missing." The data set does have a variable that is 1 if there is no specified means of control. We can analyze this variable to determine if it would be worthwhile to modify the data set to salvage the means of control information that does exist.
+	From the figure, one can see that the "meansOfControl-" variables take up a large number of spaces on the list. Of the 19 variables with over 75,000 NA values, 17 of them are "meansOfControl-." This could be a direct effect of the way in which the data is recorded. If an individual is transcribing cases to the data set, they may have decided that after determining that one type of control was used, to leave all the other types as "missing." The data set does have a variable that is 1 if there is no specified means of control. We can analyze this variable to determine if it would be worthwhile to modify the data set to salvage the means of control information that does exist.
 	
-	The means of control not specified variable takes a value of 1 if there is no specified means of control. This variable has roughly 50,000 values of 1, and roughly 30,000 values of 0. Meaning that only 30,000 entries in our data set have a means of control specified. By replacing each NA in these variables with 0, we are able to add up all the values for each entry in the data set. This will tell us how many means of control variables are specified.
+	The "means of control not specified" variable takes a value of 1 if there is no specified means of control. This variable has roughly 50,000 values of 1, and roughly 30,000 values of 0. Meaning that only 30,000 entries in our data set have a means of control specified. By replacing each NA in these variables with 0, we are able to add up all the values for each entry in the data set. This will tell us how many means of control variables are specified.
 	
 	\begin{figure}[H]
 		\includegraphics[width = \textwidth]{MeansOfControlSumHist}
@@ -138,16 +140,33 @@ backend=bibtex,
 	\FloatBarrier
 In this visual, the missing values for each variable are shown visually. Each row in the visual represents a category in the data set, and the columns show each row. For example, we can see large bands of missing data in both the horizontal and vertical directions. Horizontal bands of missing data correspond to that variable having a lot of missings. For example, isSlaveryAndPractices is missing 90.92\% of its values, and as such that row seems to be almost entirely black. 
 
-Additionally, there are instances when there seems to be a large correlation between values missing in different variables. An example of this would be the "recruiter relation" variables. In virtually all cases in which one of these variables is missing, all the others are missing as well. This is interesting, as it would imply that values of 0 were entered, unlike in the case of the means of control variables. This leads one to believe that there is inconsistent data entry practices within the IOM.
+Additionally, there are instances when there seems to be a large correlation between values missing in different variables. An example of this would be the "recruiter relation" variables. In virtually all cases in which one of these variables is missing, all the others are missing as well. This is interesting, as it would imply that if the recruiter relation was known, values of 0 were entered for the recruiter relationships that were not present. This is contrast to the means of control variables, in which NA was evtered even if another means of control was observed. This leads one to believe that there is inconsistent data entry practices within the IOM.
 
 From this visual, we would consider removing "isSlaveryAndPractices", and "isForcedMarriage", as they have percentages of missing values, 90\% and 86\% respectively, that are significantly higher than the other variables. Removing these variables brings the number of complete entries from 596 to 1,218 complete cases. Removing these two variables has more than doubled our number of complete entries.
 
 While 1,218 is enough complete entries to create some meaningful models, it is still only representative of less than 2\% of all the entries in the data set. It would be a good idea to look at some interactions between missing variables, to see if there are any that are missing together as opposed to individually. This can be done with an Upset Plot, as is outlined in \cite{UpsetPlot}.
 
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{UpsetPlt1}
+\end{figure}
+
+From this visualization, along the bottom, one can see which sets of variables lead to the most missing values. For example, the "type of sex" variables and "isAbduction" have a count of roughly 25,000. This means that there are 25,000 rows in our data set that are missing all of those values. This gives us a visual way to determine which variables contribute to incomplete entries, and give us the exact number of rows that are incomplete due to those combinations of variables. Thus, we can attempt to find groups of variables that have a high number of missing rows, but that we also feel would be ineffective metrics that alw enforcement and policy makers can use. 
+
+The first set of variables have over 25,000 incomplete rows; however, removing 4 variables seems like it would be too much, especially since tis group includes "isProstitution" and "isAbduction," both of which are variables that have been shown to be correlated with high rates of human trafficking \parencite{SlaveBook, polarisTypology}. The first set that does not contain either of these two variables is set 4, which contains private sexual services, pornography, and remote interactive services. These are variables that one can feel comfortable removing, as they contribute to a large number of incomplete rows, and are hard to find and prevent from a law enforcement and policy perspective.
+
+Removing these variables yields 2950 complete cases with 28 total variables. While this process did not take into account the root causes for missing data, later discussion will attempt to determine these causes, and explain what effect it has on the final model. At this point, there are a large enough number of complete entries with a small count of variables, enough for the modeling process to begin.
+
+\subsection{Augmenting Demographic Transition Data}
+
+As previously mentioned, a country's stage in demographic transition can be determined by looking at a current population pyramid for that country. To accomplish this, the United States Census Bureau has publicly available data of every country \parencite{USCB}, including current population pyramids. By observing these, one can determine a country's current stage in demographic transition. This information was then appended to the CTDC Data Set and will serve as the dependent variable in this research. These values will replace country names in the "citizenship" and "CountryOfExploitation" variables.
+
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{DTMStage1}
+\end{figure}
 
 
 
-	\printbibliography
-	
-	
+
+\printbibliography
+
 \end{document}

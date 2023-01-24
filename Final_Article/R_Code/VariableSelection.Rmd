@@ -145,7 +145,7 @@ ggplot(top, aes(x = reorder(Variable, Count),y = Count)) +
   xlab("Variable") + ylab("Count of NAs") + coord_flip() +
   # Add Vertical line at 75000
   geom_hline(yintercept = 75000, linetype="solid", 
-                color = "salmon", size=2, alpha=0.6)
+                color = "salmon", linewidth=2, alpha=0.6)
 
 ggsave(file='./Graphics/NABarplot.png', width=6, height=3)
 ```
@@ -215,7 +215,7 @@ remove_columns(remove)
 
 Naniar Missing Visualizations
 
-```{r}
+```{r, warning = F}
 library(naniar)
 vis_miss(CTDC, warn_large_data = FALSE) +
   theme(axis.text.y = element_blank(),
@@ -231,6 +231,7 @@ vis_miss(CTDC, warn_large_data = FALSE) +
 ggsave(file='./Graphics/NaniarVis1.png', width = 6, height = 8)
 ```
 
+
 Remove isSlaveryAndPractices and isForcedMArriage
 
 ```{r}
@@ -239,9 +240,133 @@ remove = c("isSlaveryAndPractices","isForcedMarriage")
 remove_columns(remove)
 ```
 
-Missing Variables Together
+Missing Variable Intersections
+
+
+Upset Plot
+```{r, warning = F}
+library(ggupset)
+
+# For Each row in data set, create a list of what variables are NA
+
+result <- apply(
+  X = is.na(CTDC),
+  MARGIN = 1,
+  FUN = function(x) paste(colnames(CTDC)[x])
+)
+
+CTDC$NaList = result
+class(CTDC$NaList) = 'list'
+upset_plt_dataframe = CTDC['NaList']
+
+
+# Initialize PNG Save
+png(file="./Graphics/UpsetPlt1.png",
+    width     = 6,
+    height    = 6,
+    units     = "in",
+    res       = 300,
+    pointsize = 4
+)
+
+# Make Plot
+ggplot(upset_plt_dataframe, aes(x = NaList)) +
+    geom_bar() +
+    scale_x_upset(n_sets = 6) + 
+    labs(x=element_blank(), y="NA Intersection Count") +
+    theme(
+      text = element_text(family = "Latex", size = 12))
+
+dev.off()
+
+# Remove List
+
+CTDC = subset(CTDC, select = -c(NaList))
+```
+
+
 
 ```{r}
-gg_miss_upset(CTDC)
+remove = c("typeOfSexRemoteInteractiveServices","typeOfSexPornography",
+           "typeOfSexPrivateSexualServices")
+
+remove_columns(remove)
 ```
+
+Add DTM Stage To Data Set
+
+
+Create dataframe with Alpha-2 codes,and DTM stage
+```{r}
+codes = read_csv("../../Datasets/CountryCodes.csv")
+dtm = read_csv("../../Datasets/Countries_Data2.0.csv")[c(2,14)]
+
+###### left join in R using merge() function 
+df = merge(x=codes,y=dtm, by.x="Alpha-3 code", by.y = "Code", all.x=TRUE)
+Code_DTM = df[c(3,6)]
+```
+
+
+
+Add column in CTDC with DTM stage for "countryOfExploitation"
+```{r}
+
+CTDC = merge(x=CTDC,y=Code_DTM, by.x="CountryOfExploitation", by.y = "Alpha-2 code", all.x=TRUE)
+
+#rename DTM_Stage to exploitationDTM
+names(CTDC)[ncol(CTDC)] = "exploitationDTM"
+```
+
+Add column in CTDC with DTM stage for "citizenship"
+```{r}
+CTDC = merge(x=CTDC,y=df, by.x="citizenship", by.y = "Alpha-2 code", all.x=TRUE)
+
+#rename DTM_Stage to citizenshipDTM
+names(CTDC)[ncol(CTDC)] = "citizenshipDTM"
+```
+
+Remove Unnecessary Joined Data
+
+```{r}
+names(CTDC)
+```
+
+
+```{r}
+remove = c("DTM_Stage.x","Alpha-3 code",
+           "Numeric code","English short name lower case"
+           ,"ISO 3166-2")
+
+remove_columns(remove)
+```
+
+
+Save Current Data Set (Complete Entries Only)
+
+```{r}
+CTDC.2 = CTDC[complete.cases(CTDC) == T,]
+write.csv(CTDC.2,"../../Datasets/CTDC_Complete.csv", row.names = F)
+```
+
+
+Visuals for DTM Stage
+
+```{r}
+CTDC.2 = read_csv("../../Datasets/CTDC_Complete.csv")
+CTDC.2$citizenshipDTM = as.factor(CTDC.2$citizenshipDTM)
+CTDC.2$exploitationDTM = as.factor(CTDC.2$exploitationDTM)
+```
+
+```{r}
+ggplot(CTDC.2, aes(citizenshipDTM, fill = exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+  
+ggsave(file='./Graphics/DTMStage1.png', width = 8, height = 4)
+```
+
+
 
