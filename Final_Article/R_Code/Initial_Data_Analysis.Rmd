@@ -1,0 +1,118 @@
+---
+title: "Data Analysis"
+output: html_notebook
+---
+```{r}
+library(ggplot2)
+library(readr)
+
+library(extrafont) 
+library(tidyverse)
+
+# execute once to add fonts:
+# font_import() 
+
+loadfonts(device='win')
+windowsFonts("Latex" = windowsFont("CMU Serif"))
+
+CTDC.2 = read_csv("../../Datasets/CTDC_Complete.csv")
+```
+
+
+
+Visuals for DTM Stage
+
+```{r}
+CTDC.2$citizenshipDTM = as.factor(CTDC.2$citizenshipDTM)
+CTDC.2$exploitationDTM = as.factor(CTDC.2$exploitationDTM)
+```
+
+
+Citizenship DTM Barplot
+```{r}
+ggplot(CTDC.2, aes(citizenshipDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count")
+  
+ggsave(file='./Graphics/CitDTM.png', width = 4, height = 4)
+```
+Exploit DTM Barplot
+```{r}
+ggplot(CTDC.2, aes(exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Exploitation DTM Stage", y = "Count")
+  
+ggsave(file='./Graphics/ExpDTM.png', width = 4, height = 4)
+```
+
+
+
+```{r}
+ggplot(CTDC.2, aes(citizenshipDTM, fill = exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+  
+ggsave(file='./Graphics/DTMStage1.png', width = 8, height = 4)
+```
+
+Count how many cases have same citizenship and exploitation country.
+```{r}
+nrow(CTDC.2[CTDC.2$citizenship == CTDC.2$CountryOfExploitation,])
+nrow(CTDC.2)
+nrow(CTDC.2[CTDC.2$citizenship == CTDC.2$CountryOfExploitation,])/nrow(CTDC.2)
+```
+
+
+Same Country
+```{r}
+diff_country = CTDC.2[!(CTDC.2$citizenship == CTDC.2$CountryOfExploitation),]
+
+ggplot(diff_country, aes(citizenshipDTM, fill = exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+  
+ggsave(file='./Graphics/Different_CountryDTM.png', width = 8, height = 4)
+```
+
+Correlation Plot
+
+```{r}
+#Select Numeric Only
+cor_df = CTDC.2[sapply(CTDC.2, class) != 'character']
+cor_df$citizenshipDTM = as.numeric(cor_df$citizenshipDTM)
+cor_df$exploitationDTM = as.numeric(cor_df$exploitationDTM)
+corr = cor(cor_df)
+```
+
+```{r}
+library(corrplot)
+corrplot(abs(corr), method = 'color',type = 'upper', diag = FALSE,
+         order = 'hclust', is.corr = F, col = COL1('Greys', 10),
+         tl.col="black", tl.cex = 0.8, cl.cex = 0.8)
+```
+
+```{r}
+library(ggcorrplot)
+library(ggplot2)
+
+ggcorrplot(corr, colors = c("#242424", "#E7E7E7", "#242424"),
+           tl.cex = 11, tl.srt = 90, type = "upper",
+          ggtheme = ggplot2::theme_grey, show.diag = F) + 
+  theme(text = element_text(family = "Latex", size = 12),
+        axis.text.x = element_text(vjust = 0.1, hjust = 1))
+
+ggsave(file='./Graphics/CorrPlot.png', width = 7, height = 7)
+```
+

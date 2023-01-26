@@ -52,6 +52,10 @@ removed = c()
 
 ```{r}
 remove_columns <- function(remove){
+  # Add Removed Columns to Removed List
+
+  removed <<- append(unique(removed), remove)
+  
   features = names(CTDC)
 
   # Update features to only include kept variables
@@ -71,14 +75,14 @@ remove_columns <- function(remove){
 # Section #.# Logically Removing Variables
 
 ```{r}
-removed = append(removed, c(
+remove = c(
            'yearOfRegistration','Datasource','majorityStatus',
            'meansOfControlConcatenated', 'typeOfExploitConcatenated',
            'typeOfLabourConcatenated', 'typeOfSexConcatenated',
            'majorityStatusAtExploit', 'majorityEntry'
-           ))
+           )
 
-remove_columns(removed)
+remove_columns(remove)
 ```
 
 # Section #.# Quantitatively Removing Variables
@@ -88,7 +92,7 @@ remove_columns(removed)
 
 
 for (x in 1:ncol(CTDC)) { # Loop over all columns
-  column = CTDC[x]
+  column = CTDC[,x]
   unq_vals = unique(column)
   
   no_na = na.omit(unq_vals) # Remove NA value from list
@@ -333,7 +337,7 @@ names(CTDC)
 
 
 ```{r}
-remove = c("DTM_Stage.x","Alpha-3 code",
+remove = c("Alpha-3 code",
            "Numeric code","English short name lower case"
            ,"ISO 3166-2")
 
@@ -341,32 +345,32 @@ remove_columns(remove)
 ```
 
 
-Save Current Data Set (Complete Entries Only)
+Complete Entries Only and Remove Columns with Same Value Throughout
 
 ```{r}
-CTDC.2 = CTDC[complete.cases(CTDC) == T,]
-write.csv(CTDC.2,"../../Datasets/CTDC_Complete.csv", row.names = F)
-```
-
-
-Visuals for DTM Stage
-
-```{r}
-CTDC.2 = read_csv("../../Datasets/CTDC_Complete.csv")
-CTDC.2$citizenshipDTM = as.factor(CTDC.2$citizenshipDTM)
-CTDC.2$exploitationDTM = as.factor(CTDC.2$exploitationDTM)
+CTDC = CTDC[complete.cases(CTDC) == T,]
 ```
 
 ```{r}
-ggplot(CTDC.2, aes(citizenshipDTM, fill = exploitationDTM)) +
-  geom_bar() + theme_grey(base_size = 16) +
-  theme(axis.text = element_text(size = 9),
-    text = element_text(family = "Latex", size = 15)) + 
-   scale_fill_grey() +
-  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+remove = c()
+for (x in 1:ncol(CTDC)) { # Loop over all columns
+  column = CTDC[,x]
+  unq_vals = unique(column)
   
-ggsave(file='./Graphics/DTMStage1.png', width = 8, height = 4)
+
+  # If Number of Unique Values <= 1 then remove
+  if (length(unq_vals) <= 1){
+    remove = append(remove,names(CTDC)[x])
+  }
+}
+remove_columns(remove)
 ```
 
 
+
+
+```{r}
+write.csv(CTDC,"../../Datasets/CTDC_Complete.csv", row.names = F)
+CTDC
+```
 

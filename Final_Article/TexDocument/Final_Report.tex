@@ -10,6 +10,7 @@ backend=bibtex,
 \usepackage{placeins}
 \usepackage{float}
 \usepackage{multicol}
+\usepackage{subfigure}
 
 \addbibresource{ReportBib.bib}
 
@@ -160,9 +161,64 @@ Removing these variables yields 2950 complete cases with 28 total variables. Whi
 
 As previously mentioned, a country's stage in demographic transition can be determined by looking at a current population pyramid for that country. To accomplish this, the United States Census Bureau has publicly available data of every country \parencite{USCB}, including current population pyramids. By observing these, one can determine a country's current stage in demographic transition. This information was then appended to the CTDC Data Set and will serve as the dependent variable in this research. These values will replace country names in the "citizenship" and "CountryOfExploitation" variables.
 
+\subsection{Final Removal}
+
+After all the changes made, there are now more colomns in which every value is the same. Naturally, these columns will be removed from the data set, but the number of complete entries will remain he same. These variables are:
+
+\begin{itemize}
+	\item Type Of Labour Illicit Activities
+	\item Type Of Labour Peddling	
+	\item Type Of Labour Transportation
+	\item Type Of Labour Not Specified
+	\item Is Abduction		
+\end{itemize}
+
+\newpage
+\section{Preliminary Data Analysis}
+
+Before creating any models, some initial analysis of our current data set would be useful. Looking at any trends that may already exist will prove to be useful in the model creation process.
+
+\subsection{DTM Stages Data}
+
+\FloatBarrier
+\begin{figure}[H]
+	\subfigure{\includegraphics[width=0.491\textwidth]{CitDTM}}
+	\subfigure{\includegraphics[width=0.491\textwidth]{ExpDTM}}
+\end{figure}
+\FloatBarrier
+
+In this graphic, one can see that the majority of entries for Citizenship and Exploitation DTM are stage 5, with a decreasing count as the stage decreases. This certainly is interesting, but is something one would expect to see for the DTM stage of exploitation countries. Since these are typically the places in which the victim's case is recorded and added to the CTDC data set, this is not abnormal. One would expect more developed countries to have higher rates of reported cases, as they have access to the resources required to locate the victims. However, this does not explain the trend in Citizenship DTM Stages.
+
+\FloatBarrier
 \begin{figure}[H]
 	\includegraphics[width = \textwidth]{DTMStage1}
 \end{figure}
+\FloatBarrier
+
+From this chart, one can see the intersection of the two plots. Each bar has the total count of entries with a certain citizenship DTM stage, and each bar is broken down into the counts of the exploitation DTM stage. For example, one can see that there are roughly 500 victims with a citizenship DTM stage of 3, and of those, the majority are exploited in a country that is also stage 3.
+
+Of interest in this chart is the fact that for every citizenship DTM stage, the majority of the victims are exploited in a country of the same stage. This pattern can easily be explained by victims typically being exploited in their citizenship country. Further analysis shows that 777 of the 2950 entries (26.3\%) are examples of this. When we remove these entries, the visualization looks like this:
+
+\FloatBarrier
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{Different_CountryDTM}
+\end{figure}
+\FloatBarrier
+
+This image displays a different outcome. Victims from stage 4 countries are more likeley to be exploited in a stage 5 country if they are exploited in a country that is different than their citizenship. However, stages 3 and 5 exhibit the same behavior as before, and all of the stage 2 citizens are exploited in countries in stages 3, 4, and 5. Since there is such a large difference between these two visuals, it means that cases in which the citizenship and exploitation country will lead to substantial multicollinearity in the data, meaning that using both variables in any model we create could prove to be ineffective. 
+
+Additionally, sine the aim of these models is to inform policy makers, it would make sense to use exploitation DTM stage as the variable of choice, since these correspond to the place sin which individuals are actually exploited. However, removing citizenship DTM would remove valuable information for law makers of where the victims in their country are coming from. Some potential ways to counteract this is by assigning a small weight to the citizenship DTM variable, to prevent it from overpowering the rest of the variables in the model. Additionally, adding some random variation to citizenship DTM in our models would lead to the model being more robust. This idea also would be beneficial as it would account for random variation in how DTM stage was determined. Since population pyramids are constantly changing, it is possible there are disagreements on the true DTM classification of a country. For our purposes, each DTM stage in citizenship DTM will either be increased by 1, decreased by 1, or stay the same, with probabilities that will be determined later.
+
+\subsection{Correlation}
+
+Another metric that will help determine the suitability of the data set is by observing the correlation matrix of all variables. In this matrix, darker squares indicate a stronger correlation between two variables. Places in which the squares are lightest indicate little or no correlation. 
+
+\FloatBarrier
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{CorrPlot}
+\end{figure}
+\FloatBarrier
+
 
 
 
