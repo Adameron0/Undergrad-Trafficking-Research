@@ -79,7 +79,7 @@ remove = c(
            'yearOfRegistration','Datasource','majorityStatus',
            'meansOfControlConcatenated', 'typeOfExploitConcatenated',
            'typeOfLabourConcatenated', 'typeOfSexConcatenated',
-           'majorityStatusAtExploit', 'majorityEntry'
+           'majorityStatusAtExploit', 'majorityEntry', 'RecruiterRelationship'
            )
 
 remove_columns(remove)
@@ -135,7 +135,7 @@ Plot with no Variable Names
 ```{r}
 
 # Only include top Number (n) of missings
-n = 51
+n = 50
 
 top = sort(na_df$Count, decreasing = TRUE)[n]
 top = na_df[na_df$Count >= top,]
@@ -176,7 +176,7 @@ Means of Control Analysis/Removal
 
 ```{r}
 #Means of Control Only
-moc = CTDC[c(4:20)]
+moc = CTDC[c(4:18)]
 not_spec = CTDC$meansOfControlNotSpecified
 
 table(not_spec)

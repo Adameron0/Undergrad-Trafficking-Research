@@ -28,27 +28,29 @@ CTDC.2$exploitationDTM = as.factor(CTDC.2$exploitationDTM)
 ```
 
 
-Citizenship DTM Barplot
+DTM Stages Data
 ```{r}
-ggplot(CTDC.2, aes(citizenshipDTM)) +
+library(gridExtra)
+
+# Citizenship DTM Barplot
+cit_dtm_plot = ggplot(CTDC.2, aes(citizenshipDTM)) +
   geom_bar() + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15)) + 
    scale_fill_grey() +
   labs(x = "Citizenship DTM Stage", y = "Count")
-  
-ggsave(file='./Graphics/CitDTM.png', width = 4, height = 4)
-```
-Exploit DTM Barplot
-```{r}
-ggplot(CTDC.2, aes(exploitationDTM)) +
+
+# Exploit DTM Barplot
+exp_dtm_plot = ggplot(CTDC.2, aes(exploitationDTM)) +
   geom_bar() + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15)) + 
    scale_fill_grey() +
   labs(x = "Exploitation DTM Stage", y = "Count")
-  
-ggsave(file='./Graphics/ExpDTM.png', width = 4, height = 4)
+
+#merge both plots within one grid
+g <- gridExtra::grid.arrange(cit_dtm_plot, exp_dtm_plot, ncol = 2)
+ggsave(file='./Graphics/DTMStagesBarplot.png', g, width = 8, height = 4)#saves g
 ```
 
 
@@ -93,26 +95,109 @@ Correlation Plot
 cor_df = CTDC.2[sapply(CTDC.2, class) != 'character']
 cor_df$citizenshipDTM = as.numeric(cor_df$citizenshipDTM)
 cor_df$exploitationDTM = as.numeric(cor_df$exploitationDTM)
-corr = cor(cor_df)
+
+library("Hmisc") # Gives P-Values for correlation
+res2 <- rcorr(as.matrix(cor_df))
+
+
+corr = res2$r # Correlations
+corr_p = res2$P # P-values
 ```
 
-```{r}
-library(corrplot)
-corrplot(abs(corr), method = 'color',type = 'upper', diag = FALSE,
-         order = 'hclust', is.corr = F, col = COL1('Greys', 10),
-         tl.col="black", tl.cex = 0.8, cl.cex = 0.8)
-```
-
+Correlation Plot
 ```{r}
 library(ggcorrplot)
 library(ggplot2)
 
 ggcorrplot(corr, colors = c("#242424", "#E7E7E7", "#242424"),
-           tl.cex = 11, tl.srt = 90, type = "upper",
-          ggtheme = ggplot2::theme_grey, show.diag = F) + 
+           tl.cex = 11, tl.srt = 90, show.diag = F,
+          p.mat = corr_p, legend.title = "Correlation",
+          ggtheme = ggplot2::theme_classic) +
+  
   theme(text = element_text(family = "Latex", size = 12),
-        axis.text.x = element_text(vjust = 0.1, hjust = 1))
+        axis.text.x = element_text(vjust = 0.1, hjust = 1),
+        panel.background = element_rect(fill = '#242424'))
 
 ggsave(file='./Graphics/CorrPlot.png', width = 7, height = 7)
+```
+
+More Visualizations
+
+```{r}
+
+```
+
+
+
+
+
+Binary Percentage Visualization
+
+```{r}
+# Create Binary Percentage Dataframe
+bin_perc <- CTDC.2 %>% group_by(exploitationDTM) %>% 
+  summarise(across(names(CTDC.2[5:23]),sum),
+            .groups = 'drop') %>%
+  as.data.frame()
+
+bin_perc = (bin_perc/nrow(CTDC.2))[2:ncol(bin_perc)]
+```
+
+
+```{r}
+# Gather Dataframe and Add DTM Stages
+
+gath <- bin_perc %>%
+  as_data_frame()%>%
+  gather(key = "variable", value = "value")
+
+gath$exploitationDTM = rep(c(2,3,4,5),times = nrow(gath)/4)
+```
+
+Create Facet Plot
+```{r}
+# Make Facet Plot
+ggplot(gath, aes(x = exploitationDTM,
+           y = value)) +
+    facet_wrap(~ variable, ncol = 3) +
+    geom_bar(stat = "identity",
+           position = "dodge") + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey()+
+  labs(y= "Proportion", x = "Exploitation Country DTM Stage",
+       title =  "Proportion of Type & Stage Out Of All Cases")
+
+ggsave(file='./Graphics/FacetPlot1.png', width = 8.5, height = 10)
+```
+
+
+
+```{r}
+ggplot(CTDC_binary_var_perc,
+        +
+   +
+  scale_y_continuous(labels = scales::percent)
+```
+
+```{r}
+# Loop through each column name
+for (each_variable in names(CTDC_binary_var_perc[2:21])) {
+  # Create a variable name to which the plot will be assigned
+  plot_var_name <- str_c(c("ggplot", each_variable), collapse = "_")
+  print(plot_var_name)
+  # Compute the mean value of the variable 
+  mean_val <- round(mean(df[, each_variable][[1]]), 3)
+  print(mean_val)
+  # Construct the plot
+  temp_plot <- ggplot(df, aes_string(each_variable)) + # NOTE - aes_string rather than aes
+    geom_histogram(binwidth = 0.05) +
+    ggtitle(str_c("Distribution of ",each_variable)) +  # Title of the plot
+    geom_vline(xintercept = mean_val, color = "blue", lty = "dashed")
+  # Assign the plot to plot name
+  assign(plot_var_name, temp_plot)
+}
+
+gridExtra::grid.arrange(ggplot_danceability, ggplot_acousticness, ggplot_liveness, ggplot_speechiness, ncol = 2)
 ```
 

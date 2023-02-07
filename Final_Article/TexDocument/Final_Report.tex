@@ -91,7 +91,7 @@ backend=bibtex,
 	\end{itemize}
 	\end{multicols}
 	
-	After removing these columns, our data set now has 590 complete cases. This is an improvement, but it is certainly not enough to make any meaningful model. However, quantitative methods will yield better results.
+	After removing these columns, our data set now has 798 complete cases. This is an improvement, but it is certainly not enough to make any meaningful model. However, quantitative methods will yield better results.
 
 	
 	\subsection{Quantitatively Removing Variables}
@@ -109,7 +109,7 @@ backend=bibtex,
 		\end{itemize}
 	\end{multicols}
 	
-	After removing these variables, there are still only 590 complete entries. However, the removal of these variables can do nothing but help us, as there is no way they can have an effect on our model. Unfortunately, these variables are the only type that we can remove and have no negative consequences. Any other variables we omit will have downsides, and it would be beneficial to try to find which variables are having a significant effect on the number of missing values, and to remove those. Since each absent entry is given a value of NA, we can count the number of NA's in each column to get a sense of which ones are contributing the most to the lack of complete entries.
+	After removing these variables, there are still only 798 complete entries. However, the removal of these variables can do nothing but help us, as there is no way they can have an effect on our model. Unfortunately, these variables are the only type that we can remove and have no negative consequences. Any other variables we omit will have downsides, and it would be beneficial to try to find which variables are having a significant effect on the number of missing values, and to remove those. Since each absent entry is given a value of NA, we can count the number of NA's in each column to get a sense of which ones are contributing the most to the lack of complete entries.
 	
 	\begin{figure}[H]
 		\includegraphics[width = \textwidth]{NABarplot}
@@ -131,7 +131,7 @@ backend=bibtex,
 	
 	This histogram allows a visualization of how many instances there are of means of control not being specified. From this histogram, one can see that row sums of 0 are the most common and make up over two-thirds of the data entries. This means that a large proportion of our data cannot even be salvaged by replacing NAs with values of 0. Even if one were to choose to replace the NAs with 0, the sheer lack of recorded entries implies that this data is hard for law enforcement to notice. As such, even if these variables were considered to have a significant effect on model outcomes, there are so many of them that the model would place a higher importance on these types of variables. This is a result of over fitting, and since we want the final model to be applicable and easy to understand, removing these would lead to that goal the quickest.
 	
-	After removing the Means of Control variables, we are left with 33 variables, and 596 complete entries. This is great progress, but more can be made. To get a better idea of where missing values are, the following visualization is helpful:
+	After removing the Means of Control variables, we are left with 32 variables, and 806 complete entries. This is great progress, but more can be made. To get a better idea of where missing values are, the following visualization is helpful:
 	
 	\FloatBarrier
 	\begin{figure}[H]
@@ -143,9 +143,9 @@ In this visual, the missing values for each variable are shown visually. Each ro
 
 Additionally, there are instances when there seems to be a large correlation between values missing in different variables. An example of this would be the "recruiter relation" variables. In virtually all cases in which one of these variables is missing, all the others are missing as well. This is interesting, as it would imply that if the recruiter relation was known, values of 0 were entered for the recruiter relationships that were not present. This is contrast to the means of control variables, in which NA was evtered even if another means of control was observed. This leads one to believe that there is inconsistent data entry practices within the IOM.
 
-From this visual, we would consider removing "isSlaveryAndPractices", and "isForcedMarriage", as they have percentages of missing values, 90\% and 86\% respectively, that are significantly higher than the other variables. Removing these variables brings the number of complete entries from 596 to 1,218 complete cases. Removing these two variables has more than doubled our number of complete entries.
+From this visual, we would consider removing "isSlaveryAndPractices", and "isForcedMarriage", as they have percentages of missing values, 90\% and 86\% respectively, that are significantly higher than the other variables. Removing these variables brings the number of complete entries from 806 to 1,424 complete cases. Removing these two variables has more than doubled our number of complete entries.
 
-While 1,218 is enough complete entries to create some meaningful models, it is still only representative of less than 2\% of all the entries in the data set. It would be a good idea to look at some interactions between missing variables, to see if there are any that are missing together as opposed to individually. This can be done with an Upset Plot, as is outlined in \cite{UpsetPlot}.
+While 1,424 is enough complete entries to create some meaningful models, it is still only representative of less than 2\% of all the entries in the data set. It would be a good idea to look at some interactions between missing variables, to see if there are any that are missing together as opposed to individually to yield better model results. This can be done with an Upset Plot, as is outlined in \cite{UpsetPlot}.
 
 \begin{figure}[H]
 	\includegraphics[width = \textwidth]{UpsetPlt1}
@@ -155,7 +155,7 @@ From this visualization, along the bottom, one can see which sets of variables l
 
 The first set of variables have over 25,000 incomplete rows; however, removing 4 variables seems like it would be too much, especially since tis group includes "isProstitution" and "isAbduction," both of which are variables that have been shown to be correlated with high rates of human trafficking \parencite{SlaveBook, polarisTypology}. The first set that does not contain either of these two variables is set 4, which contains private sexual services, pornography, and remote interactive services. These are variables that one can feel comfortable removing, as they contribute to a large number of incomplete rows, and are hard to find and prevent from a law enforcement and policy perspective.
 
-Removing these variables yields 2950 complete cases with 28 total variables. While this process did not take into account the root causes for missing data, later discussion will attempt to determine these causes, and explain what effect it has on the final model. At this point, there are a large enough number of complete entries with a small count of variables, enough for the modeling process to begin.
+Removing these variables yields 6,672 complete cases with 27 total variables. While this process did not take into account the root causes for missing data, later discussion will attempt to determine these causes, and explain what effect it has on the final model. At this point, there are a large enough number of complete entries with a small count of variables, enough for the modeling process to begin.
 
 \subsection{Augmenting Demographic Transition Data}
 
@@ -182,8 +182,7 @@ Before creating any models, some initial analysis of our current data set would 
 
 \FloatBarrier
 \begin{figure}[H]
-	\subfigure{\includegraphics[width=0.491\textwidth]{CitDTM}}
-	\subfigure{\includegraphics[width=0.491\textwidth]{ExpDTM}}
+	\includegraphics[width=\textwidth]{DTMStagesBarplot}
 \end{figure}
 \FloatBarrier
 
@@ -195,9 +194,9 @@ In this graphic, one can see that the majority of entries for Citizenship and Ex
 \end{figure}
 \FloatBarrier
 
-From this chart, one can see the intersection of the two plots. Each bar has the total count of entries with a certain citizenship DTM stage, and each bar is broken down into the counts of the exploitation DTM stage. For example, one can see that there are roughly 500 victims with a citizenship DTM stage of 3, and of those, the majority are exploited in a country that is also stage 3.
+From this chart, one can see the intersection of the two plots. Each bar has the total count of entries with a certain citizenship DTM stage, and each bar is broken down into the counts of the exploitation DTM stage. For example, one can see that there are roughly 1500 victims with a citizenship DTM stage of 3, and of those, the majority are exploited in a country that is also stage 3.
 
-Of interest in this chart is the fact that for every citizenship DTM stage, the majority of the victims are exploited in a country of the same stage. This pattern can easily be explained by victims typically being exploited in their citizenship country. Further analysis shows that 777 of the 2950 entries (26.3\%) are examples of this. When we remove these entries, the visualization looks like this:
+Of interest in this chart is the fact that for every citizenship DTM stage, the majority of the victims are exploited in a country of the same stage. This pattern can easily be explained by victims typically being exploited in their citizenship country. Further analysis shows that 1,752 of the 6,672 entries (26.3\%) are examples of this. When we remove these entries, the visualization looks like this:
 
 \FloatBarrier
 \begin{figure}[H]
@@ -205,13 +204,15 @@ Of interest in this chart is the fact that for every citizenship DTM stage, the 
 \end{figure}
 \FloatBarrier
 
-This image displays a different outcome. Victims from stage 4 countries are more likeley to be exploited in a stage 5 country if they are exploited in a country that is different than their citizenship. However, stages 3 and 5 exhibit the same behavior as before, and all of the stage 2 citizens are exploited in countries in stages 3, 4, and 5. Since there is such a large difference between these two visuals, it means that cases in which the citizenship and exploitation country will lead to substantial multicollinearity in the data, meaning that using both variables in any model we create could prove to be ineffective. 
+This image displays a different outcome. Victims from stage 4 countries are more likeley to be exploited in a stage 5 country if they are exploited in a country that is different than their citizenship. However, stages 3 and 5 exhibit the same behavior as before, and citizens from stage 2 countries are split almost evenly between being exploited in stage 2 and 3 countries. Since thevisuals are pretty similar, we can assume that while many victims are exploited in the same country they are a citizen of, there is no evidence to suggest this will have a large impact on the outcome of our model by including these instances. 
 
-Additionally, sine the aim of these models is to inform policy makers, it would make sense to use exploitation DTM stage as the variable of choice, since these correspond to the place sin which individuals are actually exploited. However, removing citizenship DTM would remove valuable information for law makers of where the victims in their country are coming from. Some potential ways to counteract this is by assigning a small weight to the citizenship DTM variable, to prevent it from overpowering the rest of the variables in the model. Additionally, adding some random variation to citizenship DTM in our models would lead to the model being more robust. This idea also would be beneficial as it would account for random variation in how DTM stage was determined. Since population pyramids are constantly changing, it is possible there are disagreements on the true DTM classification of a country. For our purposes, each DTM stage in citizenship DTM will either be increased by 1, decreased by 1, or stay the same, with probabilities that will be determined later.
+Additionally, sine the aim of these models is to inform policy makers, it would make sense to use exploitation DTM stage as the variable of choice, since these correspond to the places in which individuals are actually exploited. However, removing citizenship DTM would remove valuable information for law makers of where the victims in their country are coming from. 
+%May not keep the rest of this paragraph%
+Some potential ways to counteract this is by assigning a small weight to the citizenship DTM variable, to prevent it from overpowering the rest of the variables in the model. Additionally, adding some random variation to citizenship DTM in our models would lead to the model being more robust. This idea also would be beneficial as it would account for random variation in how DTM stage was determined. Since population pyramids are constantly changing, it is possible there are disagreements on the true DTM classification of a country. For our purposes, each DTM stage in citizenship DTM will either be increased by 1, decreased by 1, or stay the same, with probabilities that will be determined later.
 
 \subsection{Correlation}
 
-Another metric that will help determine the suitability of the data set is by observing the correlation matrix of all variables. In this matrix, darker squares indicate a stronger correlation between two variables. Places in which the squares are lightest indicate little or no correlation. 
+Another metric that will help determine the suitability of the data set is by observing the correlation matrix of all variables. In this matrix, darker squares indicate a stronger correlation between two variables. Places in which the squares are lightest indicate little or no correlation. Additionally, after a hypothesis test is completed, an $\times$ is placed over any combination of two variables with an insignificant correlation (significance level of $p <= 0.05$ or 95\% confidence). This means that any two variables with an $\times$ have a correlation that we can not assume to be non-zero.
 
 \FloatBarrier
 \begin{figure}[H]
@@ -219,7 +220,23 @@ Another metric that will help determine the suitability of the data set is by ob
 \end{figure}
 \FloatBarrier
 
+From the figure, there are no instances of a variable having insignificant correlation with all the other variables. Additionally, there are no observed variables which have a high correlation with all other variables. This is a good sign, because it means there will not likely be any problems of collinearity. Another interesting observation is the fact that citizenshipDTM and exploitationDTM appear to have comparable correlations with each variable in the data set. However, this is to be expected, as we have already shown that cases tend to have the same value for both variables. 
 
+Already from this plot, we can see that the exploitatioDTM of a country is most correlated with typeOfLabourDomesticWork and typeOfLabourConstruction. The same is true for citizenshipDTM, and since there are no variables that are insignificantly correlated with all other variables, there is no need to make any major augmentations to the data set.
+
+\subsection{More Visualizations}
+
+Since the focus of this research is primarily on the connection between DTM and the typology of human trafficking victims, the following visuals will give more insight into these connections.
+
+\FloatBarrier
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{FacetPlot1}
+\end{figure}
+\FloatBarrier
+
+In the previous plots, across the bottom axes is the exploitation country DTM stages, and along the vertical axes is the proportion of all human trafficking victims in which the variable is observed. For example, the bottom left plot for "typeOfSexProstitution" tells us that within our data set, approximately 10\% of the cases involve prostitution in a stage 4 country. Additionally, of all cases, it seems as though a minuscule amount of them involve prostitution within countries in stages 2, 3, or 5.
+
+From these plots, we can see some rough trends, like recruiterRelationOther becoming more prominent in more developed countries. The same can be said for typeOfLabourConstruction. Additionally, isSexualExploit seems to have a peak at stage 4 countries, and isForcedLabour peaks in stage 5 countries. One can see how this information can already be of some importance to law makers. Since one can see that sexual exploits peak in stage 4 countries, then if a stage 3 country is about to enter stage 4, it would be useful to know that there will be an increase in sexual exploits within the country.
 
 
 
