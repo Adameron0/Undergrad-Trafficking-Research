@@ -44,14 +44,110 @@ cit_dtm_plot = ggplot(CTDC.2, aes(citizenshipDTM)) +
 exp_dtm_plot = ggplot(CTDC.2, aes(exploitationDTM)) +
   geom_bar() + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
-    text = element_text(family = "Latex", size = 15)) + 
+    text = element_text(family = "Latex", size = 15),
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()) + 
    scale_fill_grey() +
-  labs(x = "Exploitation DTM Stage", y = "Count")
+  labs(x = "Exploitation DTM Stage", y = element_blank())
 
 #merge both plots within one grid
 g <- gridExtra::grid.arrange(cit_dtm_plot, exp_dtm_plot, ncol = 2)
 ggsave(file='./Graphics/DTMStagesBarplot.png', g, width = 8, height = 4)#saves g
 ```
+
+Country for Each Stage
+
+```{r}
+# Citizenship DTM Barplot
+cit_country_plot = ggplot(CTDC.2, aes(citizenshipDTM, fill = citizenship)) +
+  geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15),
+    legend.position = "none") + 
+   scale_fill_manual(values=rep("#605c5c", 28)) +
+  labs(x = "Citizenship DTM Stage", y = "Count of Each Country")
+
+
+exp_country_plot = ggplot(CTDC.2,aes(exploitationDTM,
+                                     fill = CountryOfExploitation)) +
+  geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15),
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position = "none") + 
+   scale_fill_manual(values=rep("#605c5c", 32)) +
+  labs(x = "Exploitation DTM Stage", y = element_blank())
+
+#merge both plots within one grid
+g <- gridExtra::grid.arrange(cit_country_plot, exp_country_plot, ncol = 2)
+ggsave(file='./Graphics/CountryCountBarplot.png', g, width = 8, height = 4)
+```
+
+Find overpowering stage 5 country
+
+```{r}
+# Citizenship DTM Country
+t = table(CTDC.2[CTDC.2$citizenshipDTM == 5,]$citizenship)
+t[t == max(t)]
+
+# Exploitation DTM Country
+t = table(CTDC.2[CTDC.2$exploitationDTM == 5,]$CountryOfExploitation)
+t[t == max(t)]
+```
+
+Comparing Russia to Other stage 5 exploitation Chi Square:
+
+```{r}
+stage5exp = CTDC.2[CTDC.2$exploitationDTM == 5,]
+not_RU = which(stage5exp$CountryOfExploitation != 'RU')
+stage5exp$CountryOfExploitation[not_RU] = 'N_RU'
+
+c = chisq.test(stage5exp$CountryOfExploitation, stage5exp[[5]])
+c
+```
+
+
+```{r, warning = F}
+#Initialize Dataframe
+chisq_dataframe = data.frame(VariableName = c(1),
+                             ChiSquared = c(1),
+                             PValue = c(1))
+
+
+for (i in c(1:ncol(stage5exp))){
+  #Remove columns for country names and citizenship dtm
+  #----------------------
+  ignored_columns = c('citizenship', "CountryOfExploitation",
+                      'citizenshipDTM', 'exploitationDTM')
+  
+  # If columns has 1 unique value, then ignore
+  
+  if (length(unique(stage5exp[[i]]))==1){
+    ignored_columns = append(ignored_columns, names(stage5exp)[i])
+  }
+  
+  # If column isnt in ignored columns
+  if (!(names(stage5exp)[i] %in% ignored_columns)){
+    c = chisq.test(stage5exp$CountryOfExploitation, stage5exp[[i]])
+    
+    # Add Row To Table
+    chisq_dataframe[nrow(chisq_dataframe) + 1,] = 
+    c(names(stage5exp)[i],c$statistic, c$p.value)
+  }
+  
+
+
+}
+# Change Class and Remove Initial Row
+chisq_dataframe$ChiSquared = as.numeric(chisq_dataframe$ChiSquared)
+chisq_dataframe$PValue = as.numeric(chisq_dataframe$PValue)
+chisq_dataframe = chisq_dataframe[-c(1),]
+
+write.csv(chisq_dataframe, "./Graphics/ChiSquareDF1.csv")
+```
+
+
 
 
 
@@ -169,35 +265,5 @@ ggplot(gath, aes(x = exploitationDTM,
        title =  "Proportion of Type & Stage Out Of All Cases")
 
 ggsave(file='./Graphics/FacetPlot1.png', width = 8.5, height = 10)
-```
-
-
-
-```{r}
-ggplot(CTDC_binary_var_perc,
-        +
-   +
-  scale_y_continuous(labels = scales::percent)
-```
-
-```{r}
-# Loop through each column name
-for (each_variable in names(CTDC_binary_var_perc[2:21])) {
-  # Create a variable name to which the plot will be assigned
-  plot_var_name <- str_c(c("ggplot", each_variable), collapse = "_")
-  print(plot_var_name)
-  # Compute the mean value of the variable 
-  mean_val <- round(mean(df[, each_variable][[1]]), 3)
-  print(mean_val)
-  # Construct the plot
-  temp_plot <- ggplot(df, aes_string(each_variable)) + # NOTE - aes_string rather than aes
-    geom_histogram(binwidth = 0.05) +
-    ggtitle(str_c("Distribution of ",each_variable)) +  # Title of the plot
-    geom_vline(xintercept = mean_val, color = "blue", lty = "dashed")
-  # Assign the plot to plot name
-  assign(plot_var_name, temp_plot)
-}
-
-gridExtra::grid.arrange(ggplot_danceability, ggplot_acousticness, ggplot_liveness, ggplot_speechiness, ncol = 2)
 ```
 

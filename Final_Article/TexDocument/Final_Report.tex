@@ -11,6 +11,7 @@ backend=bibtex,
 \usepackage{float}
 \usepackage{multicol}
 \usepackage{subfigure}
+\usepackage{booktabs}
 
 \addbibresource{ReportBib.bib}
 
@@ -35,6 +36,7 @@ backend=bibtex,
 	- Dataset (History, purpose, etc)\\
 	- Types of models created\\
 		- Why models require complete data and fewer variables (over fitting, computing power, etc)
+		- Context of time dataset was updated (2017)
 	
 	
 	\section{Introduce Dataset}
@@ -187,6 +189,56 @@ Before creating any models, some initial analysis of our current data set would 
 \FloatBarrier
 
 In this graphic, one can see that the majority of entries for Citizenship and Exploitation DTM are stage 5, with a decreasing count as the stage decreases. This certainly is interesting, but is something one would expect to see for the DTM stage of exploitation countries. Since these are typically the places in which the victim's case is recorded and added to the CTDC data set, this is not abnormal. One would expect more developed countries to have higher rates of reported cases, as they have access to the resources required to locate the victims. However, this does not explain the trend in Citizenship DTM Stages.
+
+\subsubsection*{Individual Countries}
+
+Since the data set has only 4 categories for DTM stage, we need to ensure that none of the stages are being over represented by one specific country. If all of our stage 2 entries originate from one country, then we cannot logically conclude the model will generalize for all countries.
+
+\FloatBarrier
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{CountryCountBarplot}
+\end{figure}
+\FloatBarrier
+
+In these bar plots, each bar corresponds to an individual country, and the height of the bar shows the count of that country in the data set. In both cases, there seems to be no countries that overpower stages 2, 3, \& 4. However, in both, there seems to be one country in stage 5 that has significantly more entries than the other stage 5 countries. In order to determine if this will effect any modeling, one would need to analyze the data of the countrys in question, and determine if there is enough variation in the data to still use it. 
+
+From further analysis, it is determined that the stage 5 citizenship country with a high count is UA (Ukraine), and the high count in the stage 5 exploitation countries corresponds to RU (Russia). Since these two countries have a history of conflict, future research may yield interesting findings, given that the data set has so many entries. Additional modeling could be completed purely on Ukranian citizens who are exploited in Russia. However, this has been a long known phenomenon, in which Ukrainian citizens are exploited in Russia. This data set predates the 2022 war between Ukraine and Russia, but it has been noted that the Russian government likely has some involvement in the trafficking of persons, hence why it is so widespread in the country \parencite{RussiaTrafficking}.
+
+While further analysis of Ukraine and Russia would be interesting, the overall goal is to create a general model for all countries. To determine if the effect of these two countries is too strong, we need to determine if there is a significant difference between the overall data structure between these countries, and other stage 5 countries. This can be achieved with a Chi-Square test.
+
+For the sake of the Chi-Square test, we will have two groups of entries in the data set. Group A will be all entries which are the over represented country, and group B will be all other countries that are in the same stage. A Chi-Square test can look at each variable, and determine if there is a significant difference between the two groups for that variable. Since one group is exclusively made up of one country, this will show if that one country has a significant difference between other countries of the same stage. From this, we would ideally see that there is no significant difference between the groups in regards to any variable. 
+
+However, the Multiple Comparisons Fallacy is likely to be present. This means that for any large group of data, if a significance test is completed over every variable, eventually a significant P-Value will be found (or insignificant depending on the case). What this means for the following test is that we are hoping to find many instances of there being no significant difference between the groups, but there may be one or two insignificant p-values, and this does not discredit the entire analysis. This is further explained in \cite{Fallacy}.
+
+For the following Chi-Square tests, the null hypothesis is that group A and B not significantly different, and the alternative is that they have do have significant differences for that variable. That means that a significant p-value means that there is a significant difference between the groups. Additionally, not every variable will appear in the table, those that are omitted have the same value for all entries, and thus a test would not be possible, and would not give any meaningful information.
+
+\begin{table}[!ht]
+	\centering
+	\caption{$\chi^2$ Test For Comparing Russia to Other Stage 5 Countries of Exploitation}
+	\begin{tabular}{lccc}
+		\toprule
+		\bf{Variable Name}        & \boldmath{$\chi^2$} \bf{Statistic} & \boldmath{$p$} & \boldmath{$p<0.05$} \\ \midrule
+		gender                    &               609.9                &   1.177e-134   &   \boldmath{$*$}    \\
+		ageBroad                  &               482.9                &   3.804e-100   &   \boldmath{$*$}    \\
+		isForcedLabour            &               621.4                &   3.801e-137   &   \boldmath{$*$}    \\
+		isSexualExploit           &               621.4                &  3.8014e-137   &   \boldmath{$*$}    \\
+		typeOfLabourAgriculture   &                14.5                &    1.405e-4    &   \boldmath{$*$}    \\
+		typeOfLabourConstruction  &               297.1                &   1.443e-66    &   \boldmath{$*$}    \\
+		typeOfLabourDomesticWork  &                61.5                &   4.507e-15    &   \boldmath{$*$}    \\
+		typeOfLabourHospitality   &                57.3                &   3.750e-14    &   \boldmath{$*$}    \\
+		typeOfLabourManufacturing &                2.9                 &     0.085      &                     \\
+		typeOfLabourOther         &                4.3                 &     0.037      &   \boldmath{$*$}    \\
+		typeOfLabourNotSpecified  &                35.5                &   2.595e-09    &   \boldmath{$*$}    \\
+		recruiterRelationFriend   &                68.5                &   1.280e-16    &   \boldmath{$*$}    \\
+		recruiterRelationFamily   &                0.1                 &     0.724      &                     \\
+		recruiterRelationOther    &               131.4                &   2.050e-30    &   \boldmath{$*$}    \\
+		recruiterRelationUnknown  &               265.4                &   1.147e-59    &   \boldmath{$*$}    \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+From the test for stage 5 exploitation countries, one can see that there is a significant difference bwteeen the two groups for 13 out of the 15 variables being tested. This means that there is a significant difference between Russia and other stage 5 exploitation countries.
+
+% Insert Chi Square Table for Citizenship
 
 \FloatBarrier
 \begin{figure}[H]
