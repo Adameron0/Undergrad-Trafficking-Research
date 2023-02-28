@@ -50,20 +50,17 @@ backend=bibtex,
 	\newpage
 	\section{Problems of The CTDC Dataset}
 	
-	One of the most cited problems surrounding human trafficking data is the large amount of missing data entries \parencite{SlaveBook, polarisTypology}, and this is especially true of the CTDC data set. The CTDC data set contains 63 variables and 0 of its entries are complete. In other words, each row in the data set has atleast one variable that is missing. This means that without any data manipulation, creating a model is very difficult. Creating a model is possible only if there are significantly more complete entries in the set. There are two ways one can approach this problem. One way is by finding the causes of missing values and removing them, and another way is using the missing values as a quasi-variable. 
+
 	
-	Removing the causes of missing values is a quick and efficient way to create more usable data. Missing values are often caused by certain columns having very little recorded values, but can also be due to different columns representing the same data. Both options are observed within this data set, so removing these causes would be helpful. By removing "problem variables" the number of complete rows will increase, and the process can stop whenever a desirable number of complete rows is achieved. This method will lead to having only variables which are present in the data and means having fewer cases to analyze, which makes modeling computationally cheaper and much faster. The biggest downside to this method is that data is removed from the set, and this is data that would otherwise be extremely significant.
+	The CTDC data set contains 63 variables and 0 of its entries are complete. This means that without any data manipulation, creating a model is impossible. Creating a model is possible only if we have a significantly larger number of complete entries. One way to manipulate the data set into having a larger number of complete entries is by removing entire columns from the data set altogether. 
 	
-	A second way to approach the problem is by creating a quasi-variable for the missing values in the data set. This can be done in one of two ways. Since every variable in the data set is categorical, and most are binary, each NA or missing value can simply be replaced with a dummy value or category. By doing this, we force the entire data set to become complete. This has the upside of keeping all information, but also leads to having a large number of variables. Additionally, since most of the variables are binary, adding a third category could lead to computation times growing exponentially. Given the major time commitment of the second option, the option of removing the problem will be explored first, and if it proves to be detrimental, then the second method will be explored.
-	
-	
-	
-	\subsection{Removing "Problem Variables"}
-	
+	While this process is efficient at creating complete entries, it is important to note that we would be losing some information in the process. For example, if we remove the variable that indicates if a victim was trafficking in the mining industry, then our final model cannot incorporate that information. This is why it is important a balance is struck between having complete entries, while still maintaining as much information as possible.
 	
 	Carefully choosing which variables to remove will help ensure we are aware of what information we are losing, and that will be accounted for that in the analysis of the final model. There are two ways in which variables (columns) will be omitted from the data set. The first way is by analyzing what the variable represents. By understanding what the variable means, we can logically conclude if it will be helpful, or if it should be removed. A second approach is to quantify the amount of incomplete entries that are caused by the variable, or a group of variables. By looking at missing values, we can see what variables are missing in tandem with each other. This would help us to better understand the structure of the data set, and provide a better understanding of what causes the missing values to appear.
 	
-	\subsubsection{Logically Removing Variables}
+	
+	
+	\subsection{Logically Removing Variables}
 	 
 	
 	There are two variables that can be identified in the data set that meet this criteria. These variables are "Data Source" and "Year Of Registration." Both of these variables are representative of the manner and time in which a case was added to the data set. Data source is whether the case was reported over a hot line managed by IOM, or through a case manager on the victim's behalf. The year of registration is the year in which a case was added to the data set. Since these two variables only describe the reporting process, they will not be helpful in the process of identifying victims within a country, and can be removed without having a negative impact on the effectiveness of any models.
@@ -100,7 +97,7 @@ backend=bibtex,
 	After removing these columns, our data set now has 798 complete cases. This is an improvement, but it is certainly not enough to make any meaningful model. However, quantitative methods will yield better results.
 
 	
-	\subsubsection{Quantitatively Removing Variables}
+	\subsection{Quantitatively Removing Variables}
 	
 	The second way that individual variables can be removed is by using quantitative methods. There are many processes to complete this task, and a handful of them will be applied to this data set. 
 	
@@ -143,11 +140,9 @@ backend=bibtex,
 	\begin{figure}[H]
 		\hspace*{-2cm}
 		\includegraphics[height = 1.4\textwidth, angle = 90]{NaniarVis1}
-		\caption[]{This is a visual of every missing value in the data set. Each row represents a variable and each column represents a case of trafficking. Each black rectangle shows where a missing value is located within the data set}
-		\label{fig:Naniar}
 	\end{figure}
 	\FloatBarrier
-In this visual, the missing values for each variable are shown visually. We can see large bands of missing data in both the horizontal and vertical directions. Horizontal bands of missing data correspond to that variable having a lot of missing values. For example, isSlaveryAndPractices is missing 90.92\% of its values, and as such that row seems to be almost entirely black. 
+In this visual, the missing values for each variable are shown visually. Each row in the visual represents a category in the data set, and the columns show each row. For example, we can see large bands of missing data in both the horizontal and vertical directions. Horizontal bands of missing data correspond to that variable having a lot of missings. For example, isSlaveryAndPractices is missing 90.92\% of its values, and as such that row seems to be almost entirely black. 
 
 Additionally, there are instances when there seems to be a large correlation between values missing in different variables. An example of this would be the "recruiter relation" variables. In virtually all cases in which one of these variables is missing, all the others are missing as well. This is interesting, as it would imply that if the recruiter relation was known, values of 0 were entered for the recruiter relationships that were not present. This is contrast to the means of control variables, in which NA was evtered even if another means of control was observed. This leads one to believe that there is inconsistent data entry practices within the IOM.
 
@@ -157,7 +152,6 @@ While 1,424 is enough complete entries to create some meaningful models, it is s
 
 \begin{figure}[H]
 	\includegraphics[width = \textwidth]{UpsetPlt1}
-	\caption{Count of cases in which every variable selected under the chart is missing}
 \end{figure}
 
 From this visualization, along the bottom, one can see which sets of variables lead to the most missing values. For example, the "type of sex" variables and "isAbduction" have a count of roughly 25,000. This means that there are 25,000 rows in our data set that are missing all of those values. This gives us a visual way to determine which variables contribute to incomplete entries, and give us the exact number of rows that are incomplete due to those combinations of variables. Thus, we can attempt to find groups of variables that have a high number of missing rows, but that we also feel would be ineffective metrics that alw enforcement and policy makers can use. 
@@ -166,7 +160,11 @@ The first set of variables have over 25,000 incomplete rows; however, removing 4
 
 Removing these variables yields 6,672 complete cases with 27 total variables. While this process did not take into account the root causes for missing data, later discussion will attempt to determine these causes, and explain what effect it has on the final model. At this point, there are a large enough number of complete entries with a small count of variables, enough for the modeling process to begin.
 
-\subsubsection{Final Removal}
+\subsection{Augmenting Demographic Transition Data}
+
+As previously mentioned, a country's stage in demographic transition can be determined by looking at a current population pyramid for that country. To accomplish this, the United States Census Bureau has publicly available data of every country \parencite{USCB}, including current population pyramids. By observing these, one can determine a country's current stage in demographic transition. This information was then appended to the CTDC Data Set and will serve as the dependent variable in this research. These values will replace country names in the "citizenship" and "CountryOfExploitation" variables.
+
+\subsection{Final Removal}
 
 After all the changes made, there are now more colomns in which every value is the same. Naturally, these columns will be removed from the data set, but the number of complete entries will remain he same. These variables are:
 
@@ -178,16 +176,16 @@ After all the changes made, there are now more colomns in which every value is t
 	\item Is Abduction		
 \end{itemize}
 
-The previous methods of data augmentation have allowed us to have a complete data set; however, some unintended consequences of these steps have ultimately occurred. These consequences are not the result of any individual step, but are due to a combination of factors. The most significant contributing factor is perhaps the non-uniform distribution of missing values. This fact is best illustrated when the stages of demographic transision are added to the data set. 
+\newpage
+\section{Preliminary Data Analysis}
 
-\subsubsection{Augmenting Demographic Transition Data}
-
-As previously mentioned, a country's stage in demographic transition can be determined by looking at a current population pyramid for that country. To accomplish this, the United States Census Bureau has publicly available data of every country \parencite{USCB}, including current population pyramids. By observing these, one can determine a country's current stage in demographic transition. This information was then appended to the CTDC Data Set and will serve as the dependent variable in this research. These values will replace country names in the "citizenship" and "CountryOfExploitation" variables.
+Before creating any models, some initial analysis of our current data set would be useful. Looking at any trends that may already exist will prove to be useful in the model creation process.
 
 
-\subsubsection{Individual Country Over-representation}
 
-Since the data set has only 4 categories for DTM stage, we need to ensure that none of the stages are being over represented by one specific country. If all of our stage 2 entries originate from one country, then we cannot logically conclude the model will generalize for all countries, and this is where a major problem of the previous steps emerges.
+\subsection{Individual Country Over-representation}
+
+Since the data set has only 4 categories for DTM stage, we need to ensure that none of the stages are being over represented by one specific country. If all of our stage 2 entries originate from one country, then we cannot logically conclude the model will generalize for all countries.
 
 \FloatBarrier
 \begin{figure}[H]
@@ -195,7 +193,7 @@ Since the data set has only 4 categories for DTM stage, we need to ensure that n
 \end{figure}
 \FloatBarrier
 
-In these bar plots, each bar corresponds to an individual country, and the height of the bar shows the count of that country in the data set. In both cases, there seems to be no countries that overpower stages 2, 3, \& 4. However, in both graphs, there seems to be one country in stage 5 that has significantly more entries than the other stage 5 countries. In order to determine if this will effect any modeling, one would need to analyze the data of the countrys in question, and determine if there is enough variation in the data to still use it. 
+In these bar plots, each bar corresponds to an individual country, and the height of the bar shows the count of that country in the data set. In both cases, there seems to be no countries that overpower stages 2, 3, \& 4. However, in both, there seems to be one country in stage 5 that has significantly more entries than the other stage 5 countries. In order to determine if this will effect any modeling, one would need to analyze the data of the countrys in question, and determine if there is enough variation in the data to still use it. 
 
 From further analysis, it is determined that the stage 5 citizenship country with a high count is UA (Ukraine), and the high count in the stage 5 exploitation countries corresponds to RU (Russia). Since these two countries have a history of conflict, future research may yield interesting findings, given that the data set has so many entries. Additional modeling could be completed purely on Ukranian citizens who are exploited in Russia. However, this has been a long known phenomenon, in which Ukrainian citizens are exploited in Russia. This data set predates the 2022 war between Ukraine and Russia, but it has been noted that the Russian government likely has some involvement in the trafficking of persons, hence why it is so widespread in the country \parencite{RussiaTrafficking}.
 
@@ -259,93 +257,9 @@ From the test for stage 5 exploitation countries (Table 1), one can see that the
 
 Similarly, in Table 2 we see the same problem arises with Ukraine, despite there being more stage five countries represented in citizenship than with country of exploitation. Since these are both instances of oversampling from one population (Ukrainian citizens and Russian exploits), this can be counteracted by applying a weight to these instances in the data set. Another solution would be to randomly select entries in which Russia is the country of exploitation or Ukraine in the same of citizenship. This allows us to bring the raw sample count down so that these countries are not over represented.
 
-The process of weighting means that instead of letting these countries (Russia and Ukraine) have the same effect on the model as other countries in their respective categories of exploitation and citizenship, one can assign a weight to these cases. This weight would be less than 1, since we want these cases to have a smaller effect on the model. This process is outlined in \cite{Oversample}, and would be implemented in the modeling phase.
+The process of weighting means that instead of letting these countries (Russia and Ukraine) have the same effect on the model as other countries in their respective categories of exploitation and citizenship, one can assign a weight to these cases. This weight would be less than 1, since we want these cases to have a smaller effect on the model. This process is outlined in \cite{Oversample}, and would be implemented in the modeling phase. One downside to this is an inability to apply these weights before the modeling, as this would skew other results in the data analysis. Even then, the skew would be minor, as the trends that will be observed exist over many stages, and not just stage 5.
 
-\subsubsection{Conclusions From Removing Causes of Missing Data}
-
-Initially, the act of creating complete entries was done so in an effort to reduce computational time, simplify data analysis, and allow simple model creation. However, in doing so, a combination of factors has led to the creation of a biased data set. Looking again at figure \ref{fig:Naniar}, one can see that the distribution of missing values is extremely non-uniform, implying that there may be a significant effect that other variables have on a variable being missing. For example, it could be that every case located in a particular country may have the same value missing. Additionally, there are some cases in which most values are missing. This c ould be cause for concern, but is not an insurmountable issue.
-
-The second major problem is the over-representation of Russia and Ukraine, this could be due to having a larger number of cases than other stage 5 countries, or it could also be indicative of data reported from these countries containing more information. Either way, the oversampling of these two countries is extremely significant, and is cause for concern. It is for these reasons that the process of creating quasi-variables will be attempted.
-
-\subsection{Quasi-Variable Representation of Missing Values}
-
-To start, the initial large data set will be revisited. With 63 columns and 0 complete entries, we will now begin the process of redefining all of the missing values. 
-
-\subsubsection{Removing Non-Valuable Variables}
-
-To start, the summary variables will be removed, for the same reasons as mentioned previously. These variables serve as a character summary of other attributes of a case which are already recorded as binary data.
-
-\begin{multicols}{2}
-	\begin{itemize}
-		\item Means of Control Concatenated
-		\item Type of Exploit Concatenated
-		\item Type of Labour Concatenated
-		\item Recruiter Relationship
-	\end{itemize}
-\end{multicols}
-
-After removing these variables, each missing value in the data set is assigned a value of -1. This allows us to have a simple way to notice which values were missing, as -1 is not a possible value anywhere in the data set. Since it is a value with no meaning anywhere in the data set, we can safely use it to denote when a value is missing. A good objectinve would be to replace some of these missing values with values of 0 or 1. It is reasonable to assume that for the type of labor variables, that if a 1 is recorded, it is likeley that the person recording the data simply left the other types of labour as missing, when in reality they should be 0. This can be said for every category, but first we should see if any other trends exist.
-
-\subsubsection{Missing trends}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+The second method of randomly sampling cases is achieved by artificially removing cases randomly, this in turn forces the raw count of Ukrainian citizens and Russian exploits to be reduced, without giving preference to any particular cases. The major drawback to this is the removal of data that would otherwise be useful. Ultimatley the decision cannot be made until a better picture of the overall dataset is achieved, but it is important to keep these ideas in mind moving forward.
 
 \subsection{DTM Stages Data}
 

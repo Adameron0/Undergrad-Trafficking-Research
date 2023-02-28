@@ -148,6 +148,51 @@ write.csv(chisq_dataframe, "./Graphics/ChiSquareDF1.csv")
 ```
 
 
+Repeat For Citizenship
+
+```{r}
+stage5cit = CTDC.2[CTDC.2$citizenshipDTM == 5,]
+not_UA = which(stage5exp$citizenship != 'UA')
+stage5cit$citizenship[not_RU] = 'N_UA'
+
+#Initialize Dataframe
+chisq_dataframe = data.frame(VariableName = c(1),
+                             ChiSquared = c(1),
+                             PValue = c(1))
+
+
+for (i in c(1:ncol(stage5cit))){
+  #Remove columns for country names and citizenship dtm
+  #----------------------
+  ignored_columns = c('citizenship', "citizenship",
+                      'citizenshipDTM', 'exploitationDTM')
+  
+  # If columns has 1 unique value, then ignore
+  
+  if (length(unique(stage5cit[[i]]))==1){
+    ignored_columns = append(ignored_columns, names(stage5cit)[i])
+  }
+  
+  # If column isnt in ignored columns
+  if (!(names(stage5exp)[i] %in% ignored_columns)){
+    c = chisq.test(stage5cit$citizenship, stage5cit[[i]])
+    
+    # Add Row To Table
+    chisq_dataframe[nrow(chisq_dataframe) + 1,] = 
+    c(names(stage5cit)[i],c$statistic, c$p.value)
+  }
+  
+
+
+}
+# Change Class and Remove Initial Row
+chisq_dataframe$ChiSquared = as.numeric(chisq_dataframe$ChiSquared)
+chisq_dataframe$PValue = as.numeric(chisq_dataframe$PValue)
+chisq_dataframe = chisq_dataframe[-c(1),]
+chisq_dataframe
+
+write.csv(chisq_dataframe, "./Graphics/ChiSquareDF2.csv")
+```
 
 
 
