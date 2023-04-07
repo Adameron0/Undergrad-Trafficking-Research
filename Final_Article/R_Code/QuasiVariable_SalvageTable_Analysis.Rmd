@@ -1,0 +1,518 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# Initial Trends
+
+```{r}
+library(readr)
+library(rlist)
+
+library(extrafont) 
+library(tidyverse)
+
+# execute once to add fonts:
+# font_import() 
+
+loadfonts(device='win')
+windowsFonts("Latex" = windowsFont("CMU Serif"))
+
+salvage_list = list.load("../../Datasets/salvage_list.RData")
+Sal_CTDC = read_csv("../../Datasets/SalvagedCTDC.csv")
+CTDC = read_csv("../../Datasets/CTDC.csv")[-1]
+CTDC <- CTDC %>% relocate(CountryOfExploitation, .after = citizenship)
+```
+
+```{r}
+sal_counts = data.frame("Category" = c("Sexual Exploit","Labour Exploit",
+                                       "Means of Control", "recruiter Relation"),
+                        
+                        "Salvaged Rows" = c(length(salvage_list$sexSalvaged),
+                                            length(salvage_list$labourSalvaged),
+                                      length(salvage_list$meanscontrolSalvaged),
+                                      length(salvage_list$recruiterSalvaged))
+)
+sal_counts
+```
+
+```{r}
+nul_vec = rep(0, nrow(CTDC))
+sex_sal_ind = nul_vec
+lab_sal_ind = nul_vec
+moc_sal_ind = nul_vec
+rec_sal_ind = nul_vec
+
+
+for (i in 1:nrow(CTDC)){
+  if (i %in% salvage_list$sexSalvaged){
+    sex_sal_ind[i] = 1
+  }
+}
+
+for (i in 1:nrow(CTDC)){
+  if (i %in% salvage_list$labourSalvaged){
+    lab_sal_ind[i] = 1
+  }
+}
+
+for (i in 1:nrow(CTDC)){
+  if (i %in% salvage_list$meanscontrolSalvaged){
+    moc_sal_ind[i] = 1
+  }
+}
+
+for (i in 1:nrow(CTDC)){
+  if (i %in% salvage_list$recruiterSalvaged){
+    rec_sal_ind[i] = 1
+  }
+}
+
+
+salvaged_mask = data.frame("Sexual Exploit" = sex_sal_ind,
+                           "Labour Exploit" = lab_sal_ind,
+                           "Means of Control" = moc_sal_ind,
+                           "Recruiter Relation" = rec_sal_ind)
+
+salvaged_mask$citizenship = CTDC$citizenship
+salvaged_mask$CountryOfExploitation = CTDC$CountryOfExploitation
+```
+
+Remove rows that are not salvaged
+
+```{r}
+del = c(0)
+
+for (rowid in 1:nrow(salvaged_mask)){
+  row = salvaged_mask[rowid,]
+  if (sum(row[,1:4]) == 0){
+    del = append(del,rowid)
+  } 
+}
+
+salvaged_mask = salvaged_mask[-del,]
+```
+
+
+
+Intersection Plots
+
+```{r}
+
+salvaged_mask2 = salvaged_mask
+
+
+
+salvaged_mask2[which(!(salvaged_mask2$CountryOfExploitation %in% c("PH","UA","MD","US",NA, "RU"))),]$CountryOfExploitation = "Other"
+
+salvaged_mask2[which(!(salvaged_mask2$citizenship %in% c("PH","UA","MD","US",NA, "RU"))),]$citizenship = "Other"
+
+salvaged_mask2[which(is.na(salvaged_mask2$citizenship)),]$citizenship = "Unknown"
+salvaged_mask2[which(is.na(salvaged_mask2$CountryOfExploitation)),]$CountryOfExploitation = "Unknown"
+
+salvaged_mask2
+```
+
+
+
+```{r}
+library(ggplot2)
+library(ComplexUpset)
+
+# Save File
+png(file="./Graphics/SalvageRowsUpset.png",width = 1200, height = 900, res = 200)
+
+# Categories to plot
+cats = colnames(salvaged_mask2)[1:4]
+
+# Levels to Plot
+lvls = c("Unknown","MD",'RU',"US",'PH','UA','Other')
+
+#Color Pallate
+
+pallate = c("MD"="#4B9CD3", "US" = "#13294B",
+            "RU"="#4F758B", "PH" = "#00594C",
+            "UA" = "#EF426F", "Other" = "#ac643c",
+            "Unknown" = "#F4E8DD")
+
+upset(salvaged_mask2, cats, name='Variable Categories', width_ratio=0.1,
+      set_sizes=FALSE,
+      base_annotations=list(
+        'Salvaged Rows'=intersection_size(counts=FALSE) +
+          theme(text = element_text(family = "Latex", size = 12))
+    ),
+      
+      
+      annotations = list(
+        'Country of Exploitation'=(
+             ggplot(mapping=aes(fill=factor(CountryOfExploitation,
+                                            levels = lvls)))
+            + geom_bar(stat='count', position='fill')
+            + scale_y_continuous(labels=scales::percent_format())
+            + theme(legend.position="none",
+                    text = element_text(family = "Latex", size = 12)) 
+            + ylab("Country of \n Exploitation")
+            + scale_fill_manual(values=pallate)
+            ),
+        
+        'Citizenship'=(
+             ggplot(mapping=aes(fill=factor(citizenship,
+                                            levels = lvls)))
+            + geom_bar(stat='count', position='fill')
+            + scale_y_continuous(labels=scales::percent_format())
+            + theme(text = element_text(family = "Latex", size = 12)) 
+            + ylab("Citizenship") 
+            + scale_fill_manual(name = "Country",
+                                values=pallate,
+                                drop = FALSE))
+        )
+    ) + theme(text = element_text(family = "Latex", size = 12))
+
+#ggsave(file='./Graphics/SalvageRowsUpset.png', width = 8, height = 5)
+dev.off()
+```
+
+```{r}
+Sal_CTDC_Fac = Sal_CTDC[-c(1,2)]
+
+for (i in 1:ncol(Sal_CTDC_Fac)){
+  Sal_CTDC_Fac[i] = as.factor(Sal_CTDC_Fac[[i]])
+}
+
+```
+
+Factor Analysis
+
+
+Treat DTM as numeric, drop year, datasource, majority variables
+```{r}
+ModelData1 = Sal_CTDC_Fac[-c(1,2,5:7)]
+
+ModelData1$exploitationDTM = as.numeric(as.character(ModelData1$exploitationDTM))
+
+ModelData1$citizenshipDTM = as.numeric(as.character(ModelData1$citizenshipDTM))
+
+# Remove NA values from dtm
+
+ModelData1 = ModelData1[which(ModelData1$exploitationDTM != -1),]
+ModelData1 = ModelData1[which(ModelData1$citizenshipDTM != -1),]
+```
+
+```{r}
+LMOD1 = lm(exploitationDTM ~ ., data = ModelData1[-53])
+drop1(LMOD1, test = "F")[c(5,6)]
+mean(abs(predict(LMOD1)-ModelData1$exploitationDTM))
+```
+
+# Repeat Analysis From Earlier With NEw Dataset
+
+```{r}
+library(ggplot2)
+library(readr)
+
+library(extrafont) 
+library(tidyverse)
+
+# execute once to add fonts:
+# font_import() 
+
+loadfonts(device='win')
+windowsFonts("Latex" = windowsFont("CMU Serif"))
+
+CTDC.2 = Sal_CTDC
+```
+
+
+
+Visuals for DTM Stage
+
+```{r}
+CTDC.2$citizenshipDTM = as.factor(CTDC.2$citizenshipDTM)
+CTDC.2$exploitationDTM = as.factor(CTDC.2$exploitationDTM)
+```
+
+
+DTM Stages Data
+```{r}
+library(gridExtra)
+
+# Citizenship DTM Barplot
+cit_dtm_plot = ggplot(CTDC.2, aes(citizenshipDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count")
+
+# Exploit DTM Barplot
+exp_dtm_plot = ggplot(CTDC.2
+, aes(exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15),
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()) + 
+   scale_fill_grey() +
+  labs(x = "Exploitation DTM Stage", y = element_blank())
+
+#merge both plots within one grid
+g <- gridExtra::grid.arrange(cit_dtm_plot, exp_dtm_plot, ncol = 2)
+ggsave(file='./Graphics/SalDTMStagesBarplot.jpg', g, width = 8, height = 4)#saves g
+```
+
+Country for Each Stage
+
+```{r}
+# Citizenship DTM Barplot
+cit_country_plot = ggplot(CTDC.2[which(CTDC.2$citizenshipDTM!=-1),], aes(citizenshipDTM, fill = fct_rev(fct_infreq(citizenship)))) +
+  geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15),
+    legend.position = "none") + 
+   scale_fill_manual(values=rep("#605c5c", 100)) +
+  labs(x = "Citizenship DTM Stage", y = "Count of Each Country")
+
+
+exp_country_plot = ggplot(CTDC.2[which(CTDC.2$exploitationDTM!=-1),],
+  aes(exploitationDTM, fill = fct_rev(fct_infreq(CountryOfExploitation)))) +
+  geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15),
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank(),
+    legend.position = "none") + 
+   scale_fill_manual(values=rep("#605c5c", 100)) +
+  labs(x = "Exploitation DTM Stage", y = element_blank())
+
+#merge both plots within one grid
+g <- gridExtra::grid.arrange(cit_country_plot, exp_country_plot, ncol = 2)
+ggsave(file='./Graphics/SalCountryCountBarplot.png', g, width = 8, height = 4)
+```
+
+Find overpowering stage 5 country
+
+```{r}
+# Citizenship DTM Country
+t = table(CTDC.2[CTDC.2$citizenshipDTM == 4,]$citizenship)
+t[t == max(t)]
+
+# Exploitation DTM Country
+t = table(CTDC.2[CTDC.2$exploitationDTM == 4,]$CountryOfExploitation)
+t[t == max(t)]
+```
+
+Comparing Russia to Other stage 5 exploitation Chi Square:
+
+```{r}
+stage5exp = CTDC.2[CTDC.2$exploitationDTM == 5,]
+not_RU = which(stage5exp$CountryOfExploitation != 'RU')
+stage5exp$CountryOfExploitation[not_RU] = 'N_RU'
+
+c = chisq.test(stage5exp$CountryOfExploitation, stage5exp[[5]])
+c
+```
+
+
+```{r, warning = F}
+#Initialize Dataframe
+chisq_dataframe = data.frame(VariableName = c(1),
+                             ChiSquared = c(1),
+                             PValue = c(1))
+
+
+for (i in c(1:ncol(stage5exp))){
+  #Remove columns for country names and citizenship dtm
+  #----------------------
+  ignored_columns = c('citizenship', "CountryOfExploitation",
+                      'citizenshipDTM', 'exploitationDTM')
+  
+  # If columns has 1 unique value, then ignore
+  
+  if (length(unique(stage5exp[[i]]))==1){
+    ignored_columns = append(ignored_columns, names(stage5exp)[i])
+  }
+  
+  # If column isnt in ignored columns
+  if (!(names(stage5exp)[i] %in% ignored_columns)){
+    c = chisq.test(stage5exp$CountryOfExploitation, stage5exp[[i]])
+    
+    # Add Row To Table
+    chisq_dataframe[nrow(chisq_dataframe) + 1,] = 
+    c(names(stage5exp)[i],c$statistic, c$p.value)
+  }
+  
+
+
+}
+# Change Class and Remove Initial Row
+chisq_dataframe$ChiSquared = as.numeric(chisq_dataframe$ChiSquared)
+chisq_dataframe$PValue = as.numeric(chisq_dataframe$PValue)
+chisq_dataframe = chisq_dataframe[-c(1),]
+
+write.csv(chisq_dataframe, "./Graphics/ChiSquareDF1.csv")
+```
+
+
+Repeat For Citizenship
+
+```{r}
+stage5cit = CTDC.2[CTDC.2$citizenshipDTM == 5,]
+not_UA = which(stage5exp$citizenship != 'UA')
+stage5cit$citizenship[not_RU] = 'N_UA'
+
+#Initialize Dataframe
+chisq_dataframe = data.frame(VariableName = c(1),
+                             ChiSquared = c(1),
+                             PValue = c(1))
+
+
+for (i in c(1:ncol(stage5cit))){
+  #Remove columns for country names and citizenship dtm
+  #----------------------
+  ignored_columns = c('citizenship', "citizenship",
+                      'citizenshipDTM', 'exploitationDTM')
+  
+  # If columns has 1 unique value, then ignore
+  
+  if (length(unique(stage5cit[[i]]))==1){
+    ignored_columns = append(ignored_columns, names(stage5cit)[i])
+  }
+  
+  # If column isnt in ignored columns
+  if (!(names(stage5exp)[i] %in% ignored_columns)){
+    c = chisq.test(stage5cit$citizenship, stage5cit[[i]])
+    
+    # Add Row To Table
+    chisq_dataframe[nrow(chisq_dataframe) + 1,] = 
+    c(names(stage5cit)[i],c$statistic, c$p.value)
+  }
+  
+
+
+}
+# Change Class and Remove Initial Row
+chisq_dataframe$ChiSquared = as.numeric(chisq_dataframe$ChiSquared)
+chisq_dataframe$PValue = as.numeric(chisq_dataframe$PValue)
+chisq_dataframe = chisq_dataframe[-c(1),]
+chisq_dataframe
+
+write.csv(chisq_dataframe, "./Graphics/ChiSquareDF2.csv")
+```
+
+
+
+```{r}
+ggplot(CTDC.2, aes(citizenshipDTM, fill = exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+  
+ggsave(file='./Graphics/DTMStage1.png', width = 8, height = 4)
+```
+
+Count how many cases have same citizenship and exploitation country.
+```{r}
+nrow(CTDC.2[CTDC.2$citizenship == CTDC.2$CountryOfExploitation,])
+nrow(CTDC.2)
+nrow(CTDC.2[CTDC.2$citizenship == CTDC.2$CountryOfExploitation,])/nrow(CTDC.2)
+```
+
+
+Same Country
+```{r}
+diff_country = CTDC.2[!(CTDC.2$citizenship == CTDC.2$CountryOfExploitation),]
+
+ggplot(diff_country, aes(citizenshipDTM, fill = exploitationDTM)) +
+  geom_bar() + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey() +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+  
+ggsave(file='./Graphics/Different_CountryDTM.png', width = 8, height = 4)
+```
+
+Correlation Plot
+
+```{r}
+#Select Numeric Only
+cor_df = CTDC.2[sapply(CTDC.2, class) != 'character']
+cor_df$citizenshipDTM = as.numeric(cor_df$citizenshipDTM)
+cor_df$exploitationDTM = as.numeric(cor_df$exploitationDTM)
+
+library("Hmisc") # Gives P-Values for correlation
+res2 <- rcorr(as.matrix(cor_df))
+
+
+corr = res2$r # Correlations
+corr_p = res2$P # P-values
+```
+
+Correlation Plot
+```{r}
+library(ggcorrplot)
+library(ggplot2)
+
+ggcorrplot(corr, colors = c("#242424", "#E7E7E7", "#242424"),
+           tl.cex = 11, tl.srt = 90, show.diag = F,
+          p.mat = corr_p, legend.title = "Correlation",
+          ggtheme = ggplot2::theme_classic) +
+  
+  theme(text = element_text(family = "Latex", size = 12),
+        axis.text.x = element_text(vjust = 0.1, hjust = 1),
+        panel.background = element_rect(fill = '#242424'))
+
+ggsave(file='./Graphics/CorrPlot.png', width = 7, height = 7)
+```
+
+More Visualizations
+
+```{r}
+
+```
+
+
+
+
+
+Binary Percentage Visualization
+
+```{r}
+# Create Binary Percentage Dataframe
+bin_perc <- CTDC.2 %>% group_by(exploitationDTM) %>% 
+  summarise(across(names(CTDC.2[5:23]),sum),
+            .groups = 'drop') %>%
+  as.data.frame()
+
+bin_perc = (bin_perc/nrow(CTDC.2))[2:ncol(bin_perc)]
+```
+
+
+```{r}
+# Gather Dataframe and Add DTM Stages
+
+gath <- bin_perc %>%
+  as_data_frame()%>%
+  gather(key = "variable", value = "value")
+
+gath$exploitationDTM = rep(c(2,3,4,5),times = nrow(gath)/4)
+```
+
+Create Facet Plot
+```{r}
+# Make Facet Plot
+ggplot(gath, aes(x = exploitationDTM,
+           y = value)) +
+    facet_wrap(~ variable, ncol = 3) +
+    geom_bar(stat = "identity",
+           position = "dodge") + theme_grey(base_size = 16) +
+  theme(axis.text = element_text(size = 9),
+    text = element_text(family = "Latex", size = 15)) + 
+   scale_fill_grey()+
+  labs(y= "Proportion", x = "Exploitation Country DTM Stage",
+       title =  "Proportion of Type & Stage Out Of All Cases")
+
+ggsave(file='./Graphics/FacetPlot1.png', width = 8.5, height = 10)
+```
+

@@ -184,6 +184,19 @@ The previous methods of data augmentation have allowed us to have a complete dat
 
 As previously mentioned, a country's stage in demographic transition can be determined by looking at a current population pyramid for that country. To accomplish this, the United States Census Bureau has publicly available data of every country \parencite{USCB}, including current population pyramids. By observing these, one can determine a country's current stage in demographic transition. This information was then appended to the CTDC Data Set and will serve as the dependent variable in this research. These values will replace country names in the "citizenship" and "CountryOfExploitation" variables.
 
+\subsubsection{Correlation}
+
+Another metric that will help determine the suitability of the data set is by observing the correlation matrix of all variables. In this matrix, darker squares indicate a stronger correlation between two variables. Places in which the squares are lightest indicate little or no correlation. Additionally, after a hypothesis test is completed, an $\times$ is placed over any combination of two variables with an insignificant correlation (significance level of $p <= 0.05$). This means that any two variables without an $\times$ have a correlation that we can assume to be significantly different from 0.
+
+\FloatBarrier
+\begin{figure}[H]
+	\includegraphics[width = \textwidth]{CorrPlot}
+\end{figure}
+\FloatBarrier
+
+From the figure, there are no instances of a variable having insignificant correlation with all the other variables. Additionally, there are no observed variables which have a high correlation with all other variables. This is a good sign, because it means there will not likely be any problems of collinearity. Another interesting observation is the fact that citizenshipDTM and exploitationDTM appear to have comparable correlations with each variable in the data set. However, this is to be expected, as we have already shown that cases tend to have the same value for both variables. 
+
+Already from this plot, we can see that the exploitatioDTM of a country is most correlated with typeOfLabourDomesticWork and typeOfLabourConstruction. The same is true for citizenshipDTM, and since there are no variables that are insignificantly correlated with all other variables, there is no need to make any major augmentations to the data set. This means that the data set could be a contender for creating thorough and significant models.
 
 \subsubsection{Individual Country Over-representation}
 
@@ -255,25 +268,27 @@ For the following Chi-Square tests, the null hypothesis is that group A and B no
 	\end{tabular}
 \end{table}
 \FloatBarrier
-From the test for stage 5 exploitation countries (Table 1), one can see that there is a significant difference bwteeen the two groups for 13 out of the 15 variables being tested. This means that there is a significant difference between Russia and other stage 5 exploitation countries. This means we have an over representation problem, in which one subset of stage 5 countries (Russia) is having a significant effect on our overall data set. This is comparable to sampling bias, and similar measures can be used to combat the issue. Also note that these results are only a problem due to the large number of entries. If we had determined that the countries were not significantly different, then no action would need to be taken. It is due to the large number of entries and the lack of similarities that are the root of the issue, neither one of these facts is an issue on its own.
+From the test for stage 5 exploitation countries (Table 1), one can see that there is a significant difference between the two groups for 13 out of the 15 variables being tested. This means that there is a significant difference between Russia and other stage 5 exploitation countries. This means we have an over representation problem, in which one subset of stage 5 countries (Russia) is having a significant effect on our overall data set. This is comparable to sampling bias, and similar measures can be used to combat the issue. Also note that these results are only a problem due to the large number of entries. If we had determined that the countries were not significantly different, then no action would need to be taken. It is due to the large number of entries and the lack of similarities that are the root of the issue, neither one of these facts is an issue on its own.
 
 Similarly, in Table 2 we see the same problem arises with Ukraine, despite there being more stage five countries represented in citizenship than with country of exploitation. Since these are both instances of oversampling from one population (Ukrainian citizens and Russian exploits), this can be counteracted by applying a weight to these instances in the data set. Another solution would be to randomly select entries in which Russia is the country of exploitation or Ukraine in the same of citizenship. This allows us to bring the raw sample count down so that these countries are not over represented.
 
 The process of weighting means that instead of letting these countries (Russia and Ukraine) have the same effect on the model as other countries in their respective categories of exploitation and citizenship, one can assign a weight to these cases. This weight would be less than 1, since we want these cases to have a smaller effect on the model. This process is outlined in \cite{Oversample}, and would be implemented in the modeling phase.
 
+
+
 \subsubsection{Conclusions From Removing Causes of Missing Data}
 
-Initially, the act of creating complete entries was done so in an effort to reduce computational time, simplify data analysis, and allow simple model creation. However, in doing so, a combination of factors has led to the creation of a biased data set. Looking again at figure \ref{fig:Naniar}, one can see that the distribution of missing values is extremely non-uniform, implying that there may be a significant effect that other variables have on a variable being missing. For example, it could be that every case located in a particular country may have the same value missing. Additionally, there are some cases in which most values are missing. This c ould be cause for concern, but is not an insurmountable issue.
+Initially, the act of creating complete entries was done so in an effort to reduce computational time, simplify data analysis, and allow simple model creation. However, in doing so, a combination of factors has led to the creation of a biased data set. Looking again at figure \ref{fig:Naniar}, one can see that the distribution of missing values is extremely non-uniform, implying that there may be a significant effect that other variables have on a variable being missing. For example, it could be that every case located in a particular country may have the same value missing. Additionally, there are some cases in which most values are missing. This could be cause for concern, but is not an insurmountable issue.
 
-The second major problem is the over-representation of Russia and Ukraine, this could be due to having a larger number of cases than other stage 5 countries, or it could also be indicative of data reported from these countries containing more information. Either way, the oversampling of these two countries is extremely significant, and is cause for concern. It is for these reasons that the process of creating quasi-variables will be attempted.
+The second major problem is the over-representation of Russia and Ukraine, this could be due to having a larger number of cases than other stage 5 countries, or it could also be indicative of data reported from these countries containing more information and fewer missing values. Either way, the oversampling of these two countries is extremely significant, and is cause for concern. While it would be possible to solve this problem by selecting a sub-sample of these entries for our data, this would greatly reduce the number of usable entries, and would lead to ineffective and insignificant models. It is for these reasons that the process ofcreating a data set that implements "missing-ness" as a variable, in hopes of creating a larger data set. 
 
 \subsection{Quasi-Variable Representation of Missing Values}
 
-To start, the initial large data set will be revisited. With 63 columns and 0 complete entries, we will now begin the process of redefining all of the missing values. 
+To start, the initial large data set will be revisited. With 63 columns and 0 complete entries, we will now begin the process of creating a second potential data set for modeling. This data set will attempt to implement information gained from knowing which variables are missing, instead of ignoring missing data entirely.
 
-\subsubsection{Removing Non-Valuable Variables}
+\subsubsection{Salvaging Missing Data}
 
-To start, the summary variables will be removed, for the same reasons as mentioned previously. These variables serve as a character summary of other attributes of a case which are already recorded as binary data.
+To start, the summary variables will be removed, for the same reasons as mentioned previously. These variables serve as a text summary of other attributes of a case which are already recorded as binary data. These removed variables are:
 
 \begin{multicols}{2}
 	\begin{itemize}
@@ -284,65 +299,44 @@ To start, the summary variables will be removed, for the same reasons as mention
 	\end{itemize}
 \end{multicols}
 
-After removing these variables, each missing value in the data set is assigned a value of -1. This allows us to have a simple way to notice which values were missing, as -1 is not a possible value anywhere in the data set. Since it is a value with no meaning anywhere in the data set, we can safely use it to denote when a value is missing. A good objectinve would be to replace some of these missing values with values of 0 or 1. It is reasonable to assume that for the type of labor variables, that if a 1 is recorded, it is likeley that the person recording the data simply left the other types of labour as missing, when in reality they should be 0. This can be said for every category, but first we should see if any other trends exist.
+After removing these variables, each missing value (NA) in the data set is assigned a value of -1. This allows us to have a simple way to notate and keep track of which values are missing. A value of -1 is not a possible value anywhere in the data set, so we can safely use it to denote when a value is missing. A good objective would be to replace some of these missing values with values of 0 or 1. To begin this, it was realized that there were many instances of missing variables in a variable category (such as type of labour), even when other values were recorded as 1 in that category. It is believed that this is a result of individuals recording data into the database only putting values of 1, but not values of 0 into the data set. It is impossible to know exactly how the data was recorded, but simple assumptions such as these must be made in order to gather useful information we otherwise would not have.
 
-\subsubsection{Missing trends}
+There are many instances in the data set in which a value of 1 is recorded for a sub-variable within certain variable categories, and all other variables in the category are missing. It is reasonable to assume that this is potentially a mistake, and these missings should actually be zeros. So each row in the data set was checked, and instances such as these were "salvaged" by replacing the missing values with 0. The following table outlines the number of rows that were salvaged in each category of variables.
 
+\FloatBarrier
+\begin{table}[!ht]
+	\centering
+	\caption{Number of Salvaged Rows By Category}
+	\begin{tabular}{cc}
+		\toprule
+		 Variable Category  & Number of Salvaged Rows \\ \midrule
+		Sexual Exploit Type &           31            \\
+		Labour Exploit Type &          3,979          \\
+		 Means of Control   &         80,325          \\
+		Recruiter Relation  &         39,561          \\ \bottomrule
+	\end{tabular}
+\end{table}
+\FloatBarrier
+We can see from the table that there were many instances in the data set in which one sub category or type was observed, and others were left as missing. this is understandable as it could be a truly unknown value, but since the goal is to inform law enforcement on what they should be looking for, if a value is unknown when the victim is saved, it is logical to conclude it could not have been observed by law enforcement. However, it is still important to gain some more insight into where the missing values occur.
 
+First, we can visualize which rows were salvaged in the table, and seeing if these correspond to particular countries.
 
+\FloatBarrier
+\begin{figure}[H]
+	\caption{Types of Rows Salvaged By Country}
+	\includegraphics[width = \textwidth]{SalvageRowsUpset}
+\end{figure}
+\FloatBarrier
 
+To break down this figure, we start with the bottom section that consists of circles. On the left of this section is a variable category such as Labour Exploit and Recruiter Relation. As previously mentioned, all of these categories include binary variables for different aspects of the category. Aspects such as if the labour exploit was in agriculture, and if the recruiter was a family member. In each column of the plot, the dark circles indicate which combination of these categories were salvaged. For example, column 1 corresponds to rows in which Means.Of.Control was the only salvaged category, and column 2 corresponds to rows in which Means of Control and Recruiter relation were both salvaged.
 
+The next section, "Salvaged Rows" simply provides a bar plot that counts the number of rows that were salvaged for each category combination. Finally, the Citizenship and Country of Exploitation sections give a percentage of the salvaged rows that were made up by certain countries. Only the 5 most common countries that make up the salvaged rows are noted, with all other countries being represented by "Other" and NA values as "Unknown".
 
+From the visual, we also see that the most frequently salvaged rows are the ones involving Means of Control and Recruiter relation. This means that these variables were initially underrepresented in the data. This could be due to the fact means of control and recruiter relation are often overlooked in the realm of investigatory knowledge and victim assistance. This is not an unexpected result, as it is often the case in the United States and many other countries, that the manner in which a victim is exploited is perceived as more important than what led to the victim being exploited to begin with. This phenomenon is further explored in \cite{MediaRep}.
 
+Some surprising information gathered from this visual is the fact that the United States (US) is the largest contributing exploitation country to these instances of salvageable row. As a reminder, a row can only be salvaged if a value of 1 is recorded for a sub variable, and there are other variables that have missing values. This implies that the United States records data on victims in such a way that if an aspect of trafficking is not observed, it is not immediately assigned a value of 0. This may appear to be an issue of "sloppy" or inefficient record keeping, but it is also likely that if an aspect of trafficking is not observed, there is no way to truly know if it happened. For example, if a victim is rescued and it was observed that the victim was labor trafficked in an agricultural setting, there is truly no way to rule out if the victim was also trafficked in a construction setting. 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+This reasoning seems fairly straightforward and reasonable; it eliminates instances of type II errors (false negatives) as a result of difficulty investigating trafficking. These errors could even occur as a result of a victim's inability to communicate or even remember their experiences, which is a frequent occurrence among victims of trafficking \parencite{PTSD}. 
 
 
 
@@ -379,19 +373,7 @@ Additionally, sine the aim of these models is to inform policy makers, it would 
 %May not keep the rest of this paragraph%
 Some potential ways to counteract this is by assigning a small weight to the citizenship DTM variable, to prevent it from overpowering the rest of the variables in the model. Additionally, adding some random variation to citizenship DTM in our models would lead to the model being more robust. This idea also would be beneficial as it would account for random variation in how DTM stage was determined. Since population pyramids are constantly changing, it is possible there are disagreements on the true DTM classification of a country. For our purposes, each DTM stage in citizenship DTM will either be increased by 1, decreased by 1, or stay the same, with probabilities that will be determined later.
 
-\subsection{Correlation}
 
-Another metric that will help determine the suitability of the data set is by observing the correlation matrix of all variables. In this matrix, darker squares indicate a stronger correlation between two variables. Places in which the squares are lightest indicate little or no correlation. Additionally, after a hypothesis test is completed, an $\times$ is placed over any combination of two variables with an insignificant correlation (significance level of $p <= 0.05$ or 95\% confidence). This means that any two variables with an $\times$ have a correlation that we can not assume to be non-zero.
-
-\FloatBarrier
-\begin{figure}[H]
-	\includegraphics[width = \textwidth]{CorrPlot}
-\end{figure}
-\FloatBarrier
-
-From the figure, there are no instances of a variable having insignificant correlation with all the other variables. Additionally, there are no observed variables which have a high correlation with all other variables. This is a good sign, because it means there will not likely be any problems of collinearity. Another interesting observation is the fact that citizenshipDTM and exploitationDTM appear to have comparable correlations with each variable in the data set. However, this is to be expected, as we have already shown that cases tend to have the same value for both variables. 
-
-Already from this plot, we can see that the exploitatioDTM of a country is most correlated with typeOfLabourDomesticWork and typeOfLabourConstruction. The same is true for citizenshipDTM, and since there are no variables that are insignificantly correlated with all other variables, there is no need to make any major augmentations to the data set.
 
 \subsection{More Visualizations}
 

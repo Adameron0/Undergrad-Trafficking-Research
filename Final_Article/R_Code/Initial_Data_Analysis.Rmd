@@ -52,31 +52,31 @@ exp_dtm_plot = ggplot(CTDC.2, aes(exploitationDTM)) +
 
 #merge both plots within one grid
 g <- gridExtra::grid.arrange(cit_dtm_plot, exp_dtm_plot, ncol = 2)
-ggsave(file='./Graphics/DTMStagesBarplot.png', g, width = 8, height = 4)#saves g
+ggsave(file='./Graphics/DTMStagesBarplot.jpg', g, width = 8, height = 4)#saves g
 ```
 
 Country for Each Stage
 
 ```{r}
 # Citizenship DTM Barplot
-cit_country_plot = ggplot(CTDC.2, aes(citizenshipDTM, fill = citizenship)) +
+cit_country_plot = ggplot(CTDC.2, aes(citizenshipDTM, fill = fct_rev(fct_infreq(citizenship)))) +
   geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15),
     legend.position = "none") + 
-   scale_fill_manual(values=rep("#605c5c", 28)) +
+   scale_fill_manual(values=rep("#605c5c", 100)) +
   labs(x = "Citizenship DTM Stage", y = "Count of Each Country")
 
 
-exp_country_plot = ggplot(CTDC.2,aes(exploitationDTM,
-                                     fill = CountryOfExploitation)) +
+exp_country_plot = ggplot(CTDC.2,
+  aes(exploitationDTM, fill = fct_rev(fct_infreq(CountryOfExploitation)))) +
   geom_bar(position="dodge", width=0.9) + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15),
     axis.ticks.y=element_blank(),
     axis.text.y=element_blank(),
     legend.position = "none") + 
-   scale_fill_manual(values=rep("#605c5c", 32)) +
+   scale_fill_manual(values=rep("#605c5c", 100)) +
   labs(x = "Exploitation DTM Stage", y = element_blank())
 
 #merge both plots within one grid
@@ -201,8 +201,11 @@ ggplot(CTDC.2, aes(citizenshipDTM, fill = exploitationDTM)) +
   geom_bar() + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15)) + 
-   scale_fill_grey() +
-  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+   scale_fill_manual(
+     values=c("#F4E8DD","#4B9CD3","#13294B","#4F758B", "#00594C"),
+     labels=c("Unknown","2","3","4","5")) +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM") +
+  scale_x_discrete(labels = c("Unknown","2","3","4","5"))
   
 ggsave(file='./Graphics/DTMStage1.png', width = 8, height = 4)
 ```
@@ -223,8 +226,11 @@ ggplot(diff_country, aes(citizenshipDTM, fill = exploitationDTM)) +
   geom_bar() + theme_grey(base_size = 16) +
   theme(axis.text = element_text(size = 9),
     text = element_text(family = "Latex", size = 15)) + 
-   scale_fill_grey() +
-  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM")
+   scale_fill_manual(
+     values=c("#F4E8DD","#4B9CD3","#13294B","#4F758B", "#00594C"),
+     labels=c("Unknown","2","3","4","5")) +
+  labs(x = "Citizenship DTM Stage", y = "Count", fill = "Exploitation DTM") +
+  scale_x_discrete(labels = c("Unknown","2","3","4","5"))
   
 ggsave(file='./Graphics/Different_CountryDTM.png', width = 8, height = 4)
 ```
@@ -250,7 +256,7 @@ Correlation Plot
 library(ggcorrplot)
 library(ggplot2)
 
-ggcorrplot(corr, colors = c("#242424", "#E7E7E7", "#242424"),
+ggcorrplot(corr, colors = c("#242424", "#F4E8DD", "#242424"),
            tl.cex = 11, tl.srt = 90, show.diag = F,
           p.mat = corr_p, legend.title = "Correlation",
           ggtheme = ggplot2::theme_classic) +

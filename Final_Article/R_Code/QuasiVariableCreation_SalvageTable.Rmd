@@ -1,0 +1,322 @@
+---
+title: "Quasi Variable Analysis"
+output: html_notebook
+---
+
+# Initializing Packages and Functions
+```{r}
+library(readr)
+library(dplyr)
+CTDC = read_csv("../../Datasets/CTDC.csv")[-1]
+CTDC <- CTDC %>% relocate(CountryOfExploitation, .after = citizenship)
+head(CTDC)
+```
+
+```{r}
+library(ggplot2)
+
+library(extrafont) 
+library(tidyverse)
+
+# execute once to add fonts:
+# font_import() 
+
+loadfonts(device='win')
+windowsFonts("Latex" = windowsFont("CMU Serif"))
+```
+
+Remove Columns Function
+```{r}
+removed = c()
+
+remove_columns <- function(remove){
+  # Add Removed Columns to Removed List
+
+  removed <<- append(unique(removed), remove)
+  
+  features = names(CTDC)
+
+  # Update features to only include kept variables
+  features = c(setdiff(features, remove))
+  
+  # Update CTDC to only have kept features
+  CTDC <<- CTDC[features]
+}
+```
+
+# Add DTM Stage to Data Set
+
+
+Create dataframe with Alpha-2 codes,and DTM stage
+```{r}
+codes = read_csv("../../Datasets/CountryCodes.csv")
+dtm = read_csv("../../Datasets/Countries_Data2.0.csv")[c(2,14)]
+
+###### left join in R using merge() function 
+df = merge(x=codes,y=dtm, by.x="Alpha-3 code", by.y = "Code", all.x=TRUE)
+Code_DTM = df[c(3,6)]
+```
+
+
+
+Add column in CTDC with DTM stage for "countryOfExploitation"
+```{r}
+
+CTDC = merge(x=CTDC,y=Code_DTM, by.x="CountryOfExploitation", by.y = "Alpha-2 code", all.x=TRUE)
+
+#rename DTM_Stage to exploitationDTM
+names(CTDC)[ncol(CTDC)] = "exploitationDTM"
+```
+
+Add column in CTDC with DTM stage for "citizenship"
+```{r}
+CTDC = merge(x=CTDC,y=df, by.x="citizenship", by.y = "Alpha-2 code", all.x=TRUE)
+
+#rename DTM_Stage to citizenshipDTM
+names(CTDC)[ncol(CTDC)] = "citizenshipDTM"
+```
+
+Remove Unnecessary Joined Data
+
+
+```{r}
+remove = c("Alpha-3 code",
+           "Numeric code","English short name lower case"
+           ,"ISO 3166-2")
+
+remove_columns(remove)
+```
+
+# Remove Concatonated Variables
+
+
+
+```{r}
+remove = c('meansOfControlConcatenated', 'typeOfExploitConcatenated',
+           'typeOfLabourConcatenated', 'typeOfSexConcatenated',
+           'RecruiterRelationship'
+           )
+
+remove_columns(remove)
+```
+
+# Make All Columns Factor
+
+```{r}
+library(dplyr)
+
+# Double Data Type Columns
+CTDC[sapply(CTDC, is.double)]<-CTDC[sapply(CTDC, is.double)] %>%
+  replace(is.na(.), -1)
+
+#Character Data Type Columns
+CTDC[sapply(CTDC, is.character)]<-CTDC[sapply(CTDC, is.character)] %>%
+  replace(is.na(.), "-1")
+```
+
+Add 0 and 1 as Factor Level for all columns
+
+```{r}
+head(CTDC)
+```
+
+Replace NAs with 0 if 1 exists anywhere else in category or if is____ has value of 0
+
+Salvage Function
+```{r}
+
+
+quad_mapping_func = function(x){
+  # maps -1 to 0, 0 to 0, and 1 to 1
+  return(0.5*x**2+0.5*x)
+}
+
+
+null_mapping_func = function(x){
+  # maps all values to 0
+  return(0)
+}
+
+
+
+
+
+salvage = function(indexes, indicatorindex = 0){
+  
+  #
+  # Salvage takes indicies of sub categories, and replaces -1 (NA Values) 
+  # with 0 if a 1 occurs in another subcategory. Additionally, if an indicator
+  # index is provided, it will check for any discrepencies and replace 
+  # if there are none
+  # for example, if isSexualExploit is 0, then all sexual exploit categories 
+  # become 0. If isSexualExploit is 0 and a 1 still appears, then there is a
+  # Discrepency
+  # returns indicies of salvaged rows,and discrepencies
+  
+
+  salvage_indexes = c()
+  discrepency_indexes = c()
+  
+for (i in 1:nrow(CTDC2)){
+  
+  # to_salvage = T if there is a value of 1 and negative 1 in row i 
+  # within indexes
+  # to_salvage = F if row cannot be salvaged or if salvaging is unnecessary
+  
+  to_salvage = (any(CTDC2[i,indexes] == 1) & 
+            any(CTDC2[i,indexes] == -1))
+  
+  
+  # If to_salvage is true then replace -1 with 0
+  # Instead of locating values of -1, we will simply use a function
+  # that maps -1 to 0, 0 to 0, and 1 to 1 (see quad_mapping_function)
+  
+  if (to_salvage == TRUE){
+    CTDC2[i,indexes] <<- lapply(CTDC2[i,indexes], mapping_func)
+    salvage_indexes = append(salvage_indexes,i)
+    }
+}
+  if (indicatorindex != 0){
+  # If indicator index is 0, then make sub variables equal to 0
+  if (CTDC2[i,indicatorindex] == 0){
+    
+    if (any(CTDC2[i,indexes] == 1)){ # If value of 1 still appears
+      discrepency_indexes = append(discrepency_indexes,i)
+    }
+    
+    if (any(CTDC2[i,indexes] == -1)){
+      salvage_indexes = append(salvage_indexes,i)
+    }
+    
+    
+    CTDC2[i,indexes] <<- lapply(CTDC2[i,indexes], null_mapping_func)
+  }
+    
+  }
+  
+  ret_list = list("salvaged" = salvage_indexes,
+                  "discrepencies" = discrepency_indexes)
+  return(ret_list)
+  
+}
+
+```
+
+Apply salvage Function to each category
+
+```{r}
+# Duplicate CTDC
+CTDC2 = as.tibble(CTDC)
+
+
+# Create Category column indicies
+
+meansofcontrol_idx = c(10:27)
+typeoflabour_idx = c(36:48)
+isforcedlabour_idx = c(28)
+typeofsex_idx = c(49:52)
+issexualexploit_idx = c(29)
+recruiterrelation_idx = c(54:58)
+
+
+# Create Function to apply to all
+
+salvage_table = function(){
+
+sexual_exploit = salvage(typeofsex_idx, issexualexploit_idx)
+forced_labour = salvage(typeoflabour_idx, isforcedlabour_idx)
+means_of_control = salvage(meansofcontrol_idx)
+recruiter_relation = salvage(recruiterrelation_idx)
+
+ret_list = list("sexSalvaged" = sexual_exploit$salvaged,
+                "sexDiscrep" = sexual_exploit$discrepencies,
+                "labourSalvaged" = forced_labour$salvaged,
+                "labourDiscrep" = forced_labour$discrepencies,
+                "meanscontrolSalvaged" = means_of_control$salvaged,
+                "meanscontrolDiscrep" = means_of_control$discrepencies,
+                "recruiterSalvaged" = recruiter_relation$salvaged,
+                "recruiterDiscrep" = recruiter_relation$discrepencies
+                )
+ 
+return(ret_list)
+
+}
+
+salvage_list = salvage_table()
+
+
+```
+
+
+```{r}
+library(rlist)
+list.save(salvage_list, file="../../Datasets/salvage_list.RData")
+write.csv(as.data.frame(CTDC2), "../../Datasets/SalvagedCTDC.csv", row.names=FALSE)
+```
+
+
+```{r}
+list.load("../../Datasets/salvage_list.RData")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Initial Trends
+
+Which Values Missing Together
+```{r}
+# Replace All Missing with 1, and all present values with 0
+CTDC_mask = replace(CTDC, CTDC!=-1, 0)
+CTDC_mask = replace(CTDC_mask, CTDC_mask == -1, 1)
+
+CTDC_mask = CTDC_mask %>% mutate_if(is.factor,as.character)%>% mutate_if(is.character,as.numeric)
+CTDC_mask 
+```
+
+Correlation Plot
+```{r}
+
+library("Hmisc") # Gives P-Values for correlation
+res2 <- rcorr(as.matrix(CTDC_mask))
+
+
+corr = res2$r # Correlations
+corr_p = res2$P # P-values
+
+library(ggcorrplot)
+library(ggplot2)
+
+ggcorrplot(corr, colors = c("blue", "#E7E7E7", "red"),
+           tl.cex = 11, tl.srt = 90, show.diag = F, legend.title = "Correlation",
+          ggtheme = ggplot2::theme_classic) +
+  
+  theme(text = element_text(family = "Latex", size = 12),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill = '#242424'))
+```
+
+Heat Map
+
+```{r}
+library(pheatmap)
+pheatmap(CTDC_mask[1:10000,], treeheight_row = 0, treeheight_col = 0)
+```
+```{r}
+l = lm(exploitationDTM~.-CountryOfExploitation-citizenship-citizenshipDTM, data = CTDC)
+summary(l)
+```
+
