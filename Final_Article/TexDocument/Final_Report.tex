@@ -30,22 +30,51 @@ backend=bibtex,
 		
 	\end{abstract}
 	
-	\section{Demographic Transition}
+	
+	\section{Purpose/Background}
+	\begin{itemize}
+		\item Human Trafficking
+		\item Missing data problem
+		\item Modelling Problem
+		\item Purpose: To modify the CTDC data set in different ways to account for missing values and to develop meaningful models
+		\item Create data that is "optimal" for modeling
+	\end{itemize}
+	
+	\section{Demographic Transition} 
+	\begin{itemize}
+		\item Possibly go different direction and not include DTM data since focus is on data and not modeling
+		\item What is Demographic Transition
+		\item DTM with visuals
+		\item Applicability of DTM to economics and crime
+		\item Express why it would be useful for Modeling
+	\end{itemize}
 	
 	\section{Outline Methods}
 	
-	- Dataset (History, purpose, etc)\\
-	- Types of models created\\
-		- Why models require complete data and fewer variables (over fitting, computing power, etc)
-		- Context of time dataset was updated (2017)
+	\begin{itemize}
+		\item Dataset (History, purpose, etc)
+		\item Breaking countries up by stage of transition
+		\item Types of models thet could be created
+		\item Why models require complete data and fewer variables (over fitting, computing power, etc)
+		\item Context of time data set was updated (Before Russia-Ukraine conflict)
+	\end{itemize}
+
 	
 	
 	\section{Introduce Dataset}
+	\begin{itemize}
+	\item Summarize data set and define variables %https://cran.r-project.org/web/packages/naniar/vignettes/getting-started-w-naniar.html%
+	\item Explain what NA means in relation to the data set, and reasons NA may be present
+	\item Briefly describe/define missing (or complete) entries and explain why this matters
+	\item Remind that model can only be created with the complete entries
+	\end{itemize}
+
+	\newpage
+	\section{Summary of Results}
+	Placeholder Text
+	\subsection{Quantifying "Missingness"}
 	
-	- Summarize dataset and define variables (https://cran.r-project.org/web/packages/naniar/vignettes/getting-started-w-naniar.html)\\
-	- Explain what NA means in relation to the data set, and reasons NA may be present
-	- Briefly describe/define missing (or complete) entries and explain why this matters\\
-	- Remind that model can only be created with the complete entries\\
+	
 	
 	\newpage
 	\section{Problems of The CTDC Dataset}
@@ -63,7 +92,7 @@ backend=bibtex,
 	
 	Carefully choosing which variables to remove will help ensure we are aware of what information we are losing, and that will be accounted for that in the analysis of the final model. There are two ways in which variables (columns) will be omitted from the data set. The first way is by analyzing what the variable represents. By understanding what the variable means, we can logically conclude if it will be helpful, or if it should be removed. A second approach is to quantify the amount of incomplete entries that are caused by the variable, or a group of variables. By looking at missing values, we can see what variables are missing in tandem with each other. This would help us to better understand the structure of the data set, and provide a better understanding of what causes the missing values to appear.
 	
-	\subsubsection{Logically Removing Variables}
+	\subsubsection{Logically Removing Variables} \label{LogicallyRemovingVars}
 	 
 	
 	There are two variables that can be identified in the data set that meet this criteria. These variables are "Data Source" and "Year Of Registration." Both of these variables are representative of the manner and time in which a case was added to the data set. Data source is whether the case was reported over a hot line managed by IOM, or through a case manager on the victim's behalf. The year of registration is the year in which a case was added to the data set. Since these two variables only describe the reporting process, they will not be helpful in the process of identifying victims within a country, and can be removed without having a negative impact on the effectiveness of any models.
@@ -336,8 +365,24 @@ From the visual, we also see that the most frequently salvaged rows are the ones
 
 Some surprising information gathered from this visual is the fact that the United States (US) is the largest contributing exploitation country to these instances of salvageable row. As a reminder, a row can only be salvaged if a value of 1 is recorded for a sub variable, and there are other variables that have missing values. This implies that the United States records data on victims in such a way that if an aspect of trafficking is not observed, it is not immediately assigned a value of 0. This may appear to be an issue of "sloppy" or inefficient record keeping, but it is also likely that if an aspect of trafficking is not observed, there is no way to truly know if it happened. For example, if a victim is rescued and it was observed that the victim was labor trafficked in an agricultural setting, there is truly no way to rule out if the victim was also trafficked in a construction setting. 
 
-This reasoning seems fairly straightforward and reasonable; it eliminates instances of type II errors (false negatives) as a result of difficulty investigating trafficking. These errors could even occur as a result of a victim's inability to communicate or even remember their experiences, which is a frequent occurrence among victims of trafficking \parencite{PTSD}. 
+This reasoning seems fairly straightforward and reasonable; it eliminates instances of type II errors (false negatives) as a result of difficulty investigating trafficking. These errors could even occur as a result of a victim's inability to communicate or even remember their experiences, which is a frequent occurrence among victims of trafficking \parencite{PTSD}. Essentially, it is extremely difficult to determine that a certain aspect of human trafficking did not happen; additionally, from a policy and enforcement perspective, it does not make sense to make claims and decisions based solely off of an aspect of trafficking being recorded as 0 instead of NA.
 
+%Potentially make clearer explanation%
+By minimizing type II errors, policy makers are able to make decisions based off of the aspects trafficking they know to exist in their jurisdiction. These same policy makers would also be unable to preemptively "rule-out" certain aspects of trafficking, which could later become more easily recognized. So, while removing al potential type II errors int he data set seems extreme, there is reasoning to lead to this decision. This decision would also make model creation and interperetation immensely easier, as each variable would become binary (0 or 1). This binary data was the initial intent of the data set, but frequent missing values led to a data set with not a single row being complete. By replacing all NA values with 0 and interpreting values of 0 as "not observed" instead of "not present" we will have a new data set that better aligns with the scope of the project.
+
+\subsubsection{Representing Missing Values as 0}
+
+Like in previous sections, the summary character variables will be removed. Next, all of the intended binary variables will be updated to replace all missing values with 0. We also removed any variables in which every value was the same. These variables were:
+
+\begin{multicols}{3}
+	\begin{itemize}
+		\item Is Forced Military
+		\item Is Organ Removal
+		\item Type of Labour is Mining or Drilling
+	\end{itemize}
+\end{multicols}
+
+This brings our number of complete cases from 0 to 788. It was also decided to remove the "Majority Status" variables. As stated in section \ref{LogicallyRemovingVars}, these variables are missing most of the time, and are already represented in the broad age variable. Removing these brings our total complete entries to over 22 thousand. 
 
 
 

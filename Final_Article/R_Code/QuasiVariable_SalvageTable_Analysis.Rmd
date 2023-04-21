@@ -129,7 +129,7 @@ lvls = c("Unknown","MD",'RU',"US",'PH','UA','Other')
 
 #Color Pallate
 
-pallate = c("MD"="#4B9CD3", "US" = "#13294B",
+pallate = c("MD"="#13294B", "US" = "#4B9CD3",
             "RU"="#4F758B", "PH" = "#00594C",
             "UA" = "#EF426F", "Other" = "#ac643c",
             "Unknown" = "#F4E8DD")

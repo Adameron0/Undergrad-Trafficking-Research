@@ -256,7 +256,7 @@ Correlation Plot
 library(ggcorrplot)
 library(ggplot2)
 
-ggcorrplot(corr, colors = c("#242424", "#F4E8DD", "#242424"),
+ggcorrplot(corr, colors = c("#242424", "#FFFFFF", "#242424"),
            tl.cex = 11, tl.srt = 90, show.diag = F,
           p.mat = corr_p, legend.title = "Correlation",
           ggtheme = ggplot2::theme_classic) +

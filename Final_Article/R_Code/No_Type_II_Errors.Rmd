@@ -1,0 +1,34 @@
+
+
+Libraries
+
+```{r}
+library(readr)
+library(corrplot)
+```
+
+Import Data
+```{r}
+CTDC = read_csv("../../Datasets/CTDC_No_Summary_Vars.csv")[-1]
+
+
+# Replace NA With 0 For Binary Data and remove variables
+
+bin = CTDC[10:58]
+bin[is.na(bin)] = 0
+
+CTDC[10:58] = bin
+
+CTDC = subset(CTDC, 
+       select = -c(isForcedMilitary,isOrganRemoval,
+                   typeOfLabourMiningOrDrilling, majorityStatus,
+                   majorityStatusAtExploit, majorityEntry, yearOfRegistration))
+```
+
+
+
+
+```{r}
+sum(complete.cases(CTDC))
+```
+
